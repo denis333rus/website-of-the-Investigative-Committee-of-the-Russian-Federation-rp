@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Новости — СК РФ (RP){% endblock %}
+{% block content %}
+	{% if news %}
+		{% set hero = news[0] %}
+		<div class="row g-3 mb-4">
+			<div class="col-12 col-lg-8">
+				<a href="{{ url_for('news_detail', news_id=hero.id) }}" class="hero-tile d-block text-white text-decoration-none rounded p-3 p-md-4">
+					{% if hero.image_url %}
+					<div class="ratio ratio-21x9 mb-3 rounded overflow-hidden">
+						<img src="{{ hero.image_url }}" class="w-100 h-100 object-fit-cover" alt="">
+					</div>
+					{% endif %}
+					<span class="badge rounded-pill text-bg-primary mb-2">Мероприятия</span>
+					<h2 class="mb-3">{{ hero.title }}</h2>
+					<div class="small opacity-75"><i class="bi bi-clock me-1"></i>{{ hero.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+				</a>
+			</div>
+			<div class="col-12 col-lg-4">
+				<div class="row g-3">
+					{% for item in news[1:3] %}
+					<div class="col-12">
+						<a href="{{ url_for('news_detail', news_id=item.id) }}" class="side-tile d-block text-decoration-none rounded p-3">
+							<span class="badge rounded-pill text-bg-danger mb-2">Новости</span>
+							<h5 class="mb-2 text-dark">{{ item.title }}</h5>
+							<div class="small text-muted"><i class="bi bi-clock me-1"></i>{{ item.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+						</a>
+					</div>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+
+		<section class="news-grid">
+			<div class="row g-3">
+				{% for item in news[3:] %}
+				<div class="col-12 col-md-6 col-lg-4">
+					<a class="card news-card h-100 text-decoration-none" href="{{ url_for('news_detail', news_id=item.id) }}">
+						{% if item.image_url %}
+						<div class="ratio ratio-16x9 card-img-top overflow-hidden">
+							<img src="{{ item.image_url }}" class="w-100 h-100 object-fit-cover" alt="">
+						</div>
+						{% else %}
+						<div class="ratio ratio-16x9 bg-light card-img-top placeholder-wave">
+							<div class="placeholder w-100 h-100"></div>
+						</div>
+						{% endif %}
+						<div class="card-body">
+							<span class="badge rounded-pill text-bg-danger mb-2">Новости</span>
+							<h5 class="card-title text-dark">{{ item.title }}</h5>
+							<p class="card-text text-muted small mb-2 text-truncate-2">{{ item.content }}</p>
+							<div class="text-muted small d-flex align-items-center gap-3">
+								<span><i class="bi bi-clock me-1"></i>{{ item.created_at.strftime('%d.%m.%Y') }}</span>
+							</div>
+						</div>
+					</a>
+				</div>
+				{% endfor %}
+			</div>
+		</section>
+	{% else %}
+		<p>Пока нет новостей.</p>
+	{% endif %}
+{% endblock %}
+
+

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Админка — Панель{% endblock %}
+{% block content %}
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<h1 class="h3">Админ-панель</h1>
+		<a class="btn btn-primary" href="{{ url_for('admin_news_new') }}">Добавить новость</a>
+	</div>
+	<div class="row g-3">
+		<div class="col-md-6">
+			<div class="card">
+				<div class="card-body">
+					<h5 class="card-title">Всего новостей</h5>
+					<p class="display-6">{{ total_news }}</p>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-6">
+			<div class="card">
+				<div class="card-body">
+					<h5 class="card-title">Опубликовано</h5>
+					<p class="display-6">{{ published_news }}</p>
+				</div>
+			</div>
+		</div>
+	</div>
+	<hr>
+	<a class="btn btn-outline-secondary" href="{{ url_for('admin_news_list') }}">Список новостей</a>
+{% endblock %}
+
+
