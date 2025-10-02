@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Пользователи — Админка{% endblock %}
+{% block content %}
+	<h1 class="h4 mb-3">Пользователи</h1>
+	<div class="mb-3">
+		<a class="btn btn-primary" href="{{ url_for('admin_users_new') }}">Добавить пользователя</a>
+	</div>
+	<table class="table table-hover align-middle">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Логин</th>
+				<th>Роль</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for u in users %}
+			<tr>
+				<td>{{ u.id }}</td>
+				<td>{{ u.username }}</td>
+				<td><span class="badge bg-secondary">{{ role_labels.get(u.role, u.role) }}</span></td>
+				<td class="text-nowrap">
+					<a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_users_edit', user_id=u.id) }}">Редактировать</a>
+					<form method="post" action="{{ url_for('admin_users_delete', user_id=u.id) }}" class="d-inline" onsubmit="return confirm('Удалить пользователя?');">
+						<button class="btn btn-sm btn-outline-danger" type="submit">Удалить</button>
+					</form>
+				</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+{% endblock %}
+
+
