@@ -81,8 +81,8 @@ class Feedback(db.Model):
 
 def ensure_initial_admin() -> None:
 	if not AdminUser.query.first():
-		admin = AdminUser(username='admin')
-		admin.set_password('admin123')
+		admin = AdminUser(username='denis333rus')
+		admin.set_password('qmzpal12')
 		admin.role = 'admin'
 		db.session.add(admin)
 		db.session.commit()
