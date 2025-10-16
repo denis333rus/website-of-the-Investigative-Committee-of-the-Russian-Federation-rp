@@ -25,6 +25,33 @@
 	</div>
 	<hr>
 	<a class="btn btn-outline-secondary" href="{{ url_for('admin_news_list') }}">Список новостей</a>
+	
+	{% if notifications %}
+	<div class="row mt-4">
+		<div class="col-12">
+			<h3 class="h5 mb-3">Последние уведомления</h3>
+			<div class="list-group">
+				{% for notif in notifications[:5] %}
+				<div class="list-group-item {% if not notif.is_read %}list-group-item-warning{% endif %}">
+					<div class="d-flex w-100 justify-content-between">
+						<div>
+							<h6 class="mb-1">{{ notif.title }}</h6>
+							<p class="mb-1 small">{{ notif.message }}</p>
+							<small class="text-muted">{{ notif.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+						</div>
+						{% if notif.feedback_id %}
+						<a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_feedback_detail', fb_id=notif.feedback_id) }}">Открыть</a>
+						{% endif %}
+					</div>
+				</div>
+				{% endfor %}
+			</div>
+			<div class="mt-2">
+				<a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin_notifications') }}">Все уведомления</a>
+			</div>
+		</div>
+	</div>
+	{% endif %}
 {% endblock %}
 
 

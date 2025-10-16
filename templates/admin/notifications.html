@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Уведомления — Админка{% endblock %}
+{% block content %}
+	<h1 class="h4 mb-3">Уведомления</h1>
+	<div class="mb-3">
+		<form method="post" action="{{ url_for('mark_all_notifications_read') }}" class="d-inline">
+			<button class="btn btn-sm btn-outline-secondary" type="submit">Отметить все как прочитанные</button>
+		</form>
+	</div>
+	<div class="list-group">
+		{% for notif in notifications %}
+		<div class="list-group-item {% if not notif.is_read %}list-group-item-warning{% endif %}">
+			<div class="d-flex w-100 justify-content-between">
+				<div class="mb-1">
+					<h5 class="mb-1">{{ notif.title }}</h5>
+					<p class="mb-1">{{ notif.message }}</p>
+					<small class="text-muted">{{ notif.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+				</div>
+				<div class="text-end">
+					{% if notif.feedback_id %}
+					<a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_feedback_detail', fb_id=notif.feedback_id) }}">Открыть заявление</a>
+					{% endif %}
+					{% if not notif.is_read %}
+					<form method="post" action="{{ url_for('mark_notification_read', notif_id=notif.id) }}" class="d-inline">
+						<button class="btn btn-sm btn-outline-success" type="submit">Прочитано</button>
+					</form>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+		{% endfor %}
+		{% if not notifications %}
+		<div class="list-group-item text-center text-muted">
+			Нет уведомлений
+		</div>
+		{% endif %}
+	</div>
+{% endblock %}

@@ -6,6 +6,10 @@ from sqlalchemy import text
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import requests
 
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -79,6 +83,15 @@ class Feedback(db.Model):
 	created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 
+class Notification(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	title = db.Column(db.String(200), nullable=False)
+	message = db.Column(db.Text, nullable=False)
+	is_read = db.Column(db.Boolean, default=False, nullable=False)
+	created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+	feedback_id = db.Column(db.Integer, nullable=True)  # Link to feedback if applicable
+
+
 def ensure_initial_admin() -> None:
 	if not AdminUser.query.first():
 		admin = AdminUser(username='denis333rus')
@@ -122,6 +135,9 @@ def ensure_schema_updates() -> None:
 
 	# Ensure feedback table exists (create_all will also handle, but be explicit)
 	db.session.execute(text('CREATE TABLE IF NOT EXISTS feedback (id INTEGER PRIMARY KEY, full_name TEXT, email TEXT, phone TEXT, message TEXT, status TEXT, created_at TEXT)'))
+	
+	# Ensure notification table exists
+	db.session.execute(text('CREATE TABLE IF NOT EXISTS notification (id INTEGER PRIMARY KEY, title TEXT, message TEXT, is_read BOOLEAN, created_at TEXT, feedback_id INTEGER)'))
 
 	# Ensure AdminUser.role exists
 	db.session.execute(text('CREATE TABLE IF NOT EXISTS admin_user (id INTEGER PRIMARY KEY)'))
@@ -130,6 +146,134 @@ def ensure_schema_updates() -> None:
 	if 'role' not in admin_existing:
 		db.session.execute(text("ALTER TABLE admin_user ADD COLUMN role VARCHAR(50) DEFAULT 'investigator'"))
 		db.session.commit()
+
+
+def send_notification_to_all_roles(feedback_item):
+	"""Send notification about new feedback to all admin users"""
+	try:
+		# Create internal notification for all users
+		notification = Notification(
+			title=f"Новое заявление #{feedback_item.id}",
+			message=f"Поступило заявление от {feedback_item.full_name}",
+			feedback_id=feedback_item.id
+		)
+		db.session.add(notification)
+		db.session.commit()
+		
+		# Optional: External notifications (if configured)
+		# Email notification (if configured)
+		email_enabled = os.environ.get('SMTP_ENABLED', 'false').lower() == 'true'
+		if email_enabled:
+			users = AdminUser.query.all()
+			send_email_notification(feedback_item, users)
+		
+		# Discord webhook (if configured)
+		discord_webhook = os.environ.get('DISCORD_WEBHOOK_URL')
+		if discord_webhook:
+			send_discord_notification(feedback_item, discord_webhook)
+		
+		# Telegram bot (if configured)
+		telegram_bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
+		telegram_chat_id = os.environ.get('TELEGRAM_CHAT_ID')
+		if telegram_bot_token and telegram_chat_id:
+			send_telegram_notification(feedback_item, telegram_bot_token, telegram_chat_id)
+			
+	except Exception as e:
+		print(f"Notification error: {e}")
+
+
+def send_email_notification(feedback_item, users):
+	"""Send email notification to all users"""
+	try:
+		smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
+		smtp_port = int(os.environ.get('SMTP_PORT', '587'))
+		smtp_username = os.environ.get('SMTP_USERNAME')
+		smtp_password = os.environ.get('SMTP_PASSWORD')
+		
+		if not smtp_username or not smtp_password:
+			return
+			
+		msg = MIMEMultipart()
+		msg['From'] = smtp_username
+		msg['Subject'] = f"Новое заявление #{feedback_item.id} - СК РФ"
+		
+		body = f"""
+Новое заявление в интернет-приёмной СК РФ
+
+ID: {feedback_item.id}
+ФИО: {feedback_item.full_name}
+Email: {feedback_item.email or 'не указан'}
+Телефон: {feedback_item.phone or 'не указан'}
+Дата: {feedback_item.created_at.strftime('%d.%m.%Y %H:%M')}
+
+Текст заявления:
+{feedback_item.message}
+
+Для просмотра: {request.url_root}admin/feedback/{feedback_item.id}
+		"""
+		
+		msg.attach(MIMEText(body, 'plain', 'utf-8'))
+		
+		# Send to all users (you might want to add email field to AdminUser)
+		user_emails = [user.username + '@example.com' for user in users]  # Placeholder
+		
+		server = smtplib.SMTP(smtp_server, smtp_port)
+		server.starttls()
+		server.login(smtp_username, smtp_password)
+		
+		for email in user_emails:
+			msg['To'] = email
+			server.send_message(msg)
+			del msg['To']
+		
+		server.quit()
+	except Exception as e:
+		print(f"Email notification error: {e}")
+
+
+def send_discord_notification(feedback_item, webhook_url):
+	"""Send Discord webhook notification"""
+	try:
+		embed = {
+			"title": f"Новое заявление #{feedback_item.id}",
+			"color": 0xff0000,  # Red color
+			"fields": [
+				{"name": "ФИО", "value": feedback_item.full_name, "inline": True},
+				{"name": "Дата", "value": feedback_item.created_at.strftime('%d.%m.%Y %H:%M'), "inline": True},
+				{"name": "Текст", "value": feedback_item.message[:1000] + ("..." if len(feedback_item.message) > 1000 else ""), "inline": False}
+			],
+			"footer": {"text": "СК РФ - Интернет-приёмная"}
+		}
+		
+		payload = {"embeds": [embed]}
+		requests.post(webhook_url, json=payload, timeout=10)
+	except Exception as e:
+		print(f"Discord notification error: {e}")
+
+
+def send_telegram_notification(feedback_item, bot_token, chat_id):
+	"""Send Telegram notification"""
+	try:
+		message = f"""🚨 *Новое заявление #{feedback_item.id}*
+
+👤 *ФИО:* {feedback_item.full_name}
+📅 *Дата:* {feedback_item.created_at.strftime('%d.%m.%Y %H:%M')}
+
+📝 *Текст:*
+{feedback_item.message[:1000]}{"..." if len(feedback_item.message) > 1000 else ""}
+
+🔗 [Открыть в админке]({request.url_root}admin/feedback/{feedback_item.id})
+		"""
+		
+		url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+		payload = {
+			"chat_id": chat_id,
+			"text": message,
+			"parse_mode": "Markdown"
+		}
+		requests.post(url, json=payload, timeout=10)
+	except Exception as e:
+		print(f"Telegram notification error: {e}")
 
 
 def login_required(view_func):
@@ -146,7 +290,11 @@ def register_routes(app: Flask) -> None:
 	@app.context_processor
 	def inject_site_info():
 		site = SiteInfo.query.first()
-		return dict(site=site)
+		# Get unread notifications count for logged in users
+		unread_count = 0
+		if session.get('admin_logged_in'):
+			unread_count = Notification.query.filter_by(is_read=False).count()
+		return dict(site=site, unread_notifications=unread_count)
 
 	@app.route('/')
 	def index():
@@ -166,6 +314,8 @@ def register_routes(app: Flask) -> None:
 			item = Feedback(full_name=full_name, email=email, phone=phone, message=message)
 			db.session.add(item)
 			db.session.commit()
+			# Send notifications to all roles
+			send_notification_to_all_roles(item)
 			flash('Заявление отправлено. Мы свяжемся с вами при необходимости.', 'success')
 			return redirect(url_for('feedback'))
 		return render_template('feedback.html')
@@ -217,7 +367,8 @@ def register_routes(app: Flask) -> None:
 		total_news = News.query.count()
 		published_news = News.query.filter_by(is_published=True).count()
 		new_feedback = Feedback.query.filter_by(status='new').count()
-		return render_template('admin/dashboard.html', total_news=total_news, published_news=published_news, new_feedback=new_feedback)
+		notifications = Notification.query.order_by(Notification.created_at.desc()).limit(10).all()
+		return render_template('admin/dashboard.html', total_news=total_news, published_news=published_news, new_feedback=new_feedback, notifications=notifications)
 
 	def require_admin_role():
 		username = session.get('admin_username')
@@ -260,7 +411,7 @@ def register_routes(app: Flask) -> None:
 		('duty_investigator', 'Дежурный следователь'),
 		('senior_investigator', 'Ст. следователь'),
 		('deputy_head', 'Зам. отделения СК РФ'),
-		('admin', 'Администратор'),
+		('admin', 'Начальник отделения СК РФ'),
 	]
 	role_labels = {v: l for v, l in roles_choices}
 
@@ -320,13 +471,34 @@ def register_routes(app: Flask) -> None:
 	def admin_users_delete(user_id: int):
 		require_admin_role()
 		user = AdminUser.query.get_or_404(user_id)
-		if user.username == 'admin':
+		if user.username == 'denis333rus':
 			flash('Нельзя удалить базового администратора', 'warning')
 			return redirect(url_for('admin_users_list'))
 		db.session.delete(user)
 		db.session.commit()
 		flash('Пользователь удалён', 'info')
 		return redirect(url_for('admin_users_list'))
+
+	@app.route('/admin/notifications')
+	@login_required
+	def admin_notifications():
+		notifications = Notification.query.order_by(Notification.created_at.desc()).all()
+		return render_template('admin/notifications.html', notifications=notifications)
+
+	@app.route('/admin/notifications/<int:notif_id>/read', methods=['POST'])
+	@login_required
+	def mark_notification_read(notif_id):
+		notification = Notification.query.get_or_404(notif_id)
+		notification.is_read = True
+		db.session.commit()
+		return redirect(url_for('admin_notifications'))
+
+	@app.route('/admin/notifications/mark-all-read', methods=['POST'])
+	@login_required
+	def mark_all_notifications_read():
+		Notification.query.update({'is_read': True})
+		db.session.commit()
+		return redirect(url_for('admin_notifications'))
 
 	@app.route('/admin/feedback')
 	@login_required
