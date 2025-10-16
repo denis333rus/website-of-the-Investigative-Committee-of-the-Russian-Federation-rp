@@ -16,7 +16,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark sk-navbar">
 		<div class="container">
 			<a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
-                <img src="{{ url_for('static', filename='Logoskrf.png') }}" alt="Логотип" class="brand-logo">
+                <img src="{{ url_for('static', filename='Logo.png') }}" alt="Логотип" class="brand-logo">
                 <span>Следственный комитет Российской Федерации</span>
 			</a>
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample" aria-controls="navbarsExample" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,7 @@
 				<ul class="navbar-nav ms-auto">
 					{% if session.get('admin_logged_in') %}
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_users_list') }}">Пользователи</a></li>
+					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_job_applications') }}">Заявки на работу</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_dashboard') }}">Админка</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_site_settings') }}">Лидер</a></li>
 					<li class="nav-item">
@@ -53,6 +54,7 @@
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_logout') }}">Выход</a></li>
 					{% else %}
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('feedback') }}">Интернет-приёмная</a></li>
+					<li class="nav-item"><a class="nav-link" href="{{ url_for('job_application') }}">Приём на работу</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_login') }}">Вход</a></li>
 					{% endif %}
 				</ul>

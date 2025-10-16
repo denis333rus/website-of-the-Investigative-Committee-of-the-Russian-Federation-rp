@@ -11,6 +11,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 
+
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'site.db')
 
@@ -91,6 +92,18 @@ class Notification(db.Model):
 	feedback_id = db.Column(db.Integer, nullable=True)  # Link to feedback if applicable
 
 
+class JobApplication(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	full_name = db.Column(db.String(150), nullable=False)
+	desired_username = db.Column(db.String(80), nullable=False)
+	desired_password = db.Column(db.String(255), nullable=False)
+	question1 = db.Column(db.Text, nullable=False)  # Почему хотите работать в СК РФ?
+	question2 = db.Column(db.Text, nullable=False)  # Опыт работы
+	question3 = db.Column(db.Text, nullable=False)  # Дополнительная информация
+	status = db.Column(db.String(20), default='pending', nullable=False)  # pending, approved, rejected
+	created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
 def ensure_initial_admin() -> None:
 	if not AdminUser.query.first():
 		admin = AdminUser(username='denis333rus')
@@ -137,6 +150,9 @@ def ensure_schema_updates() -> None:
 	
 	# Ensure notification table exists
 	db.session.execute(text('CREATE TABLE IF NOT EXISTS notification (id INTEGER PRIMARY KEY, title TEXT, message TEXT, is_read BOOLEAN, created_at TEXT, feedback_id INTEGER)'))
+	
+	# Ensure job_application table exists
+	db.session.execute(text('CREATE TABLE IF NOT EXISTS job_application (id INTEGER PRIMARY KEY, full_name TEXT, desired_username TEXT, desired_password TEXT, question1 TEXT, question2 TEXT, question3 TEXT, status TEXT, created_at TEXT)'))
 
 	# Ensure AdminUser.role exists
 	db.session.execute(text('CREATE TABLE IF NOT EXISTS admin_user (id INTEGER PRIMARY KEY)'))
@@ -319,6 +335,54 @@ def register_routes(app: Flask) -> None:
 			return redirect(url_for('feedback'))
 		return render_template('feedback.html')
 
+	@app.route('/job-application', methods=['GET', 'POST'])
+	def job_application():
+		if request.method == 'POST':
+			full_name = request.form.get('full_name', '').strip()
+			desired_username = request.form.get('desired_username', '').strip()
+			desired_password = request.form.get('desired_password', '').strip()
+			question1 = request.form.get('question1', '').strip()
+			question2 = request.form.get('question2', '').strip()
+			question3 = request.form.get('question3', '').strip()
+			
+			if not all([full_name, desired_username, desired_password, question1, question2, question3]):
+				flash('Заполните все поля', 'warning')
+				return render_template('job_application.html', 
+					full_name=full_name, desired_username=desired_username, 
+					question1=question1, question2=question2, question3=question3)
+			
+			# Check if username already exists
+			if AdminUser.query.filter_by(username=desired_username).first():
+				flash('Пользователь с таким логином уже существует', 'danger')
+				return render_template('job_application.html', 
+					full_name=full_name, desired_username=desired_username, 
+					question1=question1, question2=question2, question3=question3)
+			
+			application = JobApplication(
+				full_name=full_name,
+				desired_username=desired_username,
+				desired_password=desired_password,
+				question1=question1,
+				question2=question2,
+				question3=question3
+			)
+			db.session.add(application)
+			db.session.commit()
+			
+			# Create notification for admins
+			notification = Notification(
+				title=f"Новая заявка на работу #{application.id}",
+				message=f"Заявка от {full_name} на должность с логином {desired_username}",
+				feedback_id=None
+			)
+			db.session.add(notification)
+			db.session.commit()
+			
+			flash('Заявка на работу отправлена. Мы рассмотрим её в ближайшее время.', 'success')
+			return redirect(url_for('job_application'))
+		
+		return render_template('job_application.html')
+
 	@app.route('/news/<int:news_id>')
 	def news_detail(news_id: int):
 		item = News.query.get_or_404(news_id)
@@ -498,6 +562,38 @@ def register_routes(app: Flask) -> None:
 		Notification.query.update({'is_read': True})
 		db.session.commit()
 		return redirect(url_for('admin_notifications'))
+
+	@app.route('/admin/job-applications')
+	@login_required
+	def admin_job_applications():
+		applications = JobApplication.query.order_by(JobApplication.created_at.desc()).all()
+		return render_template('admin/job_applications.html', applications=applications)
+
+	@app.route('/admin/job-applications/<int:app_id>', methods=['GET', 'POST'])
+	@login_required
+	def admin_job_application_detail(app_id):
+		application = JobApplication.query.get_or_404(app_id)
+		if request.method == 'POST':
+			action = request.form.get('action')
+			if action == 'approve':
+				# Create user account
+				user = AdminUser(username=application.desired_username, role='investigator')
+				user.set_password(application.desired_password)
+				db.session.add(user)
+				
+				# Update application status
+				application.status = 'approved'
+				db.session.commit()
+				
+				flash(f'Пользователь {application.desired_username} создан и заявка одобрена', 'success')
+			elif action == 'reject':
+				application.status = 'rejected'
+				db.session.commit()
+				flash('Заявка отклонена', 'info')
+			
+			return redirect(url_for('admin_job_application_detail', app_id=app_id))
+		
+		return render_template('admin/job_application_detail.html', application=application)
 
 	@app.route('/admin/feedback')
 	@login_required
