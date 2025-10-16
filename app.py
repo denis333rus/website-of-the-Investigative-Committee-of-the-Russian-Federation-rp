@@ -9,7 +9,6 @@ from werkzeug.utils import secure_filename
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import requests
 
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
