@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Отслеживание заявки — СК РФ (RP){% endblock %}
+{% block content %}
+	<h1 class="h4 mb-3">Отслеживание заявки на работу</h1>
+	<p class="text-muted">Введите логин, который вы указали в заявке, чтобы узнать статус рассмотрения.</p>
+	
+	{% if not application %}
+	<form method="post">
+		<div class="row g-3">
+			<div class="col-12 col-md-6">
+				<label class="form-label">Логин из заявки</label>
+				<input type="text" class="form-control" name="username" required placeholder="Введите логин">
+				<div class="form-text">Логин, который вы указали при подаче заявки</div>
+			</div>
+		</div>
+		<div class="mt-3">
+			<button class="btn btn-primary" type="submit">Проверить статус</button>
+		</div>
+	</form>
+	{% else %}
+	<div class="card">
+		<div class="card-header">
+			<h5 class="card-title mb-0">Статус заявки #{{ application.id }}</h5>
+		</div>
+		<div class="card-body">
+			<div class="row g-3">
+				<div class="col-md-6">
+					<strong>ФИО:</strong><br>
+					<span class="text-uppercase">{{ application.full_name }}</span>
+				</div>
+				<div class="col-md-6">
+					<strong>Желаемый логин:</strong><br>
+					{{ application.desired_username }}
+				</div>
+				<div class="col-12">
+					<strong>Статус заявки:</strong><br>
+					{% if application.status == 'pending' %}
+						<span class="badge bg-warning fs-6">🟡 Ожидает рассмотрения</span>
+						<p class="text-muted mt-2">Ваша заявка получена и находится на рассмотрении. Мы свяжемся с вами в ближайшее время.</p>
+					{% elif application.status == 'approved' %}
+						<span class="badge bg-success fs-6">🟢 Заявка одобрена</span>
+						<p class="text-success mt-2"><strong>Поздравляем! Ваша заявка одобрена.</strong><br>
+						Ваш аккаунт создан. Вы можете войти в систему используя указанные логин и пароль.</p>
+						<a class="btn btn-success" href="{{ url_for('admin_login') }}">Войти в систему</a>
+					{% elif application.status == 'rejected' %}
+						<span class="badge bg-danger fs-6">🔴 Заявка отклонена</span>
+						<p class="text-danger mt-2">К сожалению, ваша заявка была отклонена. Мы не разглашаем причину отказа.</p>
+					{% endif %}
+				</div>
+				<div class="col-12">
+					<strong>Дата подачи заявки:</strong><br>
+					{{ application.created_at.strftime('%d.%m.%Y в %H:%M') }}
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="mt-3">
+		<a class="btn btn-outline-secondary" href="{{ url_for('track_application') }}">Проверить другую заявку</a>
+	</div>
+	{% endif %}
+{% endblock %}

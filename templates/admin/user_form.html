@@ -12,6 +12,38 @@
 			<input type="password" class="form-control" name="password" {% if action!='edit' %}required{% endif %}>
 		</div>
 		<div class="mb-3">
+			<label class="form-label">ФИО (в формате: ФАМИЛИЯ ИМЯ ОТЧЕСТВО)</label>
+			<input type="text" class="form-control" name="full_name" value="{{ user.full_name if user else '' }}" placeholder="ИВАНОВ ИВАН ИВАНОВИЧ">
+		</div>
+		<div class="mb-3">
+			<label class="form-label">Должность</label>
+			<select class="form-select" name="position">
+				<option value="">Выберите должность</option>
+				<option value="Следователь" {% if user and user.position=='Следователь' %}selected{% endif %}>Следователь</option>
+				<option value="Старший следователь" {% if user and user.position=='Старший следователь' %}selected{% endif %}>Старший следователь</option>
+				<option value="Следователь по особо важным делам" {% if user and user.position=='Следователь по особо важным делам' %}selected{% endif %}>Следователь по особо важным делам</option>
+				<option value="Заместитель руководителя следственного отдела" {% if user and user.position=='Заместитель руководителя следственного отдела' %}selected{% endif %}>Заместитель руководителя следственного отдела</option>
+				<option value="Руководитель следственного отдела" {% if user and user.position=='Руководитель следственного отдела' %}selected{% endif %}>Руководитель следственного отдела</option>
+				<option value="Заместитель руководителя следственного управления" {% if user and user.position=='Заместитель руководителя следственного управления' %}selected{% endif %}>Заместитель руководителя следственного управления</option>
+				<option value="Руководитель следственного управления" {% if user and user.position=='Руководитель следственного управления' %}selected{% endif %}>Руководитель следственного управления</option>
+			</select>
+		</div>
+		<div class="mb-3">
+			<label class="form-label">Звание</label>
+			<select class="form-select" name="rank">
+				<option value="">Выберите звание</option>
+				<option value="Лейтенант юстиции" {% if user and user.rank=='Лейтенант юстиции' %}selected{% endif %}>Лейтенант юстиции</option>
+				<option value="Старший лейтенант юстиции" {% if user and user.rank=='Старший лейтенант юстиции' %}selected{% endif %}>Старший лейтенант юстиции</option>
+				<option value="Капитан юстиции" {% if user and user.rank=='Капитан юстиции' %}selected{% endif %}>Капитан юстиции</option>
+				<option value="Майор юстиции" {% if user and user.rank=='Майор юстиции' %}selected{% endif %}>Майор юстиции</option>
+				<option value="Подполковник юстиции" {% if user and user.rank=='Подполковник юстиции' %}selected{% endif %}>Подполковник юстиции</option>
+				<option value="Полковник юстиции" {% if user and user.rank=='Полковник юстиции' %}selected{% endif %}>Полковник юстиции</option>
+				<option value="Генерал-майор юстиции" {% if user and user.rank=='Генерал-майор юстиции' %}selected{% endif %}>Генерал-майор юстиции</option>
+				<option value="Генерал-лейтенант юстиции" {% if user and user.rank=='Генерал-лейтенант юстиции' %}selected{% endif %}>Генерал-лейтенант юстиции</option>
+				<option value="Генерал-полковник юстиции" {% if user and user.rank=='Генерал-полковник юстиции' %}selected{% endif %}>Генерал-полковник юстиции</option>
+			</select>
+		</div>
+		<div class="mb-3">
 			<label class="form-label">Роль</label>
 			<select class="form-select" name="role">
 				{% for value,label in roles %}

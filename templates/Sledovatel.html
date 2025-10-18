@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Рабочее место следователя — СК РФ (RP){% endblock %}
+{% block content %}
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<h1 class="h3">Рабочее место следователя</h1>
+		<div class="text-end">
+			<div class="fw-bold text-uppercase">{{ current_user.full_name or 'ФИО НЕ УКАЗАНО' }}</div>
+			<div class="small text-muted">{{ current_user.position or 'Должность не указана' }}</div>
+			<div class="small text-muted">{{ current_user.rank or 'Звание не указано' }}</div>
+		</div>
+	</div>
+	
+	<div class="row g-3">
+		<div class="col-md-6">
+			<div class="card">
+				<div class="card-body">
+					<h5 class="card-title">Последние новости</h5>
+					{% if my_news %}
+					<div class="list-group list-group-flush">
+						{% for news in my_news %}
+						<a class="list-group-item list-group-item-action" href="{{ url_for('news_detail', news_id=news.id) }}">
+							<div class="d-flex w-100 justify-content-between">
+								<h6 class="mb-1">{{ news.title }}</h6>
+								<small class="text-muted">{{ news.created_at.strftime('%d.%m %H:%M') }}</small>
+							</div>
+							<p class="mb-1 small text-truncate">{{ news.content }}</p>
+						</a>
+						{% endfor %}
+					</div>
+					{% else %}
+					<p class="text-muted">Нет новостей</p>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+		
+		<div class="col-md-6">
+			<div class="card">
+				<div class="card-body">
+					<h5 class="card-title">Уведомления</h5>
+					{% if notifications %}
+					<div class="list-group list-group-flush">
+						{% for notif in notifications %}
+						<div class="list-group-item {% if not notif.is_read %}list-group-item-warning{% endif %}">
+							<div class="d-flex w-100 justify-content-between">
+								<div>
+									<h6 class="mb-1">{{ notif.title }}</h6>
+									<p class="mb-1 small">{{ notif.message }}</p>
+									<small class="text-muted">{{ notif.created_at.strftime('%d.%m %H:%M') }}</small>
+								</div>
+								{% if notif.feedback_id %}
+								<a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_feedback_detail', fb_id=notif.feedback_id) }}">Открыть</a>
+								{% endif %}
+							</div>
+						</div>
+						{% endfor %}
+					</div>
+					{% else %}
+					<p class="text-muted">Нет уведомлений</p>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="row mt-4">
+		<div class="col-12">
+			<h3 class="h5 mb-3">Быстрые действия</h3>
+			<div class="d-flex gap-2 flex-wrap">
+				<a class="btn btn-outline-primary" href="{{ url_for('index') }}">Главная страница</a>
+				<a class="btn btn-outline-secondary" href="{{ url_for('admin_notifications') }}">Все уведомления</a>
+				<a class="btn btn-outline-info" href="{{ url_for('feedback') }}">Интернет-приёмная</a>
+			</div>
+		</div>
+	</div>
+{% endblock %}

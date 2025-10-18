@@ -3,11 +3,15 @@
 {% block content %}
 	<h1 class="h4 mb-3">Заявка на работу в СК РФ</h1>
 	<p class="text-muted">Заполните форму для подачи заявки на работу в Следственном комитете Российской Федерации.</p>
+	<div class="alert alert-info">
+		<strong>Важно:</strong> После подачи заявки вы сможете отслеживать её статус, используя указанный логин.
+	</div>
 	<form method="post">
 		<div class="row g-3">
 			<div class="col-12 col-md-6">
-				<label class="form-label">ФИО (РП)</label>
-				<input type="text" class="form-control" name="full_name" required value="{{ full_name or '' }}">
+				<label class="form-label">ФИО (в формате: ФАМИЛИЯ ИМЯ ОТЧЕСТВО)</label>
+				<input type="text" class="form-control" name="full_name" required value="{{ full_name or '' }}" placeholder="ИВАНОВ ИВАН ИВАНОВИЧ" style="text-transform: uppercase;">
+				<div class="form-text">Введите ФИО заглавными буквами</div>
 			</div>
 			<div class="col-12 col-md-3">
 				<label class="form-label">Желаемый логин</label>
@@ -24,18 +28,24 @@
 				<textarea class="form-control" name="question1" rows="3" required>{{ question1 or '' }}</textarea>
 			</div>
 			<div class="col-12">
-				<label class="form-label">Есть опыт работы в прокуратуре или юстиции</label>
+				<label class="form-label">Опишите ваш опыт работы (если есть)</label>
 				<textarea class="form-control" name="question2" rows="3" required>{{ question2 or '' }}</textarea>
 			</div>
 			<div class="col-12">
-				<label class="form-label">Ваше образование</label>
+				<label class="form-label">Дополнительная информация о себе</label>
 				<textarea class="form-control" name="question3" rows="3" required>{{ question3 or '' }}</textarea>
 			</div>
 		</div>
 		<div class="mt-3">
 			<button class="btn btn-primary" type="submit">Подать заявку</button>
+			<a class="btn btn-outline-secondary ms-2" href="{{ url_for('track_application') }}">Отследить заявку</a>
 		</div>
 	</form>
+	
+	<script>
+		// Автоматически преобразуем ФИО в заглавные буквы
+		document.querySelector('input[name="full_name"]').addEventListener('input', function(e) {
+			e.target.value = e.target.value.toUpperCase();
+		});
+	</script>
 {% endblock %}
-
-

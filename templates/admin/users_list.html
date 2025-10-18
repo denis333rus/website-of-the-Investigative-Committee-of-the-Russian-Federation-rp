@@ -9,7 +9,10 @@
 		<thead>
 			<tr>
 				<th>ID</th>
+				<th>ФИО</th>
 				<th>Логин</th>
+				<th>Должность</th>
+				<th>Звание</th>
 				<th>Роль</th>
 				<th></th>
 			</tr>
@@ -18,7 +21,10 @@
 			{% for u in users %}
 			<tr>
 				<td>{{ u.id }}</td>
+				<td>{{ u.full_name or 'Не указано' }}</td>
 				<td>{{ u.username }}</td>
+				<td>{{ u.position or 'Не указана' }}</td>
+				<td>{{ u.rank or 'Не указано' }}</td>
 				<td><span class="badge bg-secondary">{{ role_labels.get(u.role, u.role) }}</span></td>
 				<td class="text-nowrap">
 					<a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_users_edit', user_id=u.id) }}">Редактировать</a>

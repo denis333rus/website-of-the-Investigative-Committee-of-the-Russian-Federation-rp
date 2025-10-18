@@ -1,5 +1,6 @@
 from datetime import datetime
 import os
+import requests
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort, current_app
 from sqlalchemy import text
@@ -45,6 +46,9 @@ class AdminUser(db.Model):
 	username = db.Column(db.String(80), unique=True, nullable=False)
 	password_hash = db.Column(db.String(255), nullable=False)
 	role = db.Column(db.String(50), default='investigator', nullable=False)
+	full_name = db.Column(db.String(150), nullable=True)
+	position = db.Column(db.String(100), nullable=True)
+	rank = db.Column(db.String(100), nullable=True)
 
 	def set_password(self, password: str) -> None:
 		self.password_hash = generate_password_hash(password)
@@ -109,8 +113,19 @@ def ensure_initial_admin() -> None:
 		admin = AdminUser(username='denis333rus')
 		admin.set_password('qmzpal12')
 		admin.role = 'admin'
+		admin.full_name = 'ИВАНОВ ИВАН ИВАНОВИЧ'
+		admin.position = 'Руководитель следственного управления'
+		admin.rank = 'Полковник юстиции'
 		db.session.add(admin)
 		db.session.commit()
+	else:
+		# Ensure existing admin has proper data
+		admin = AdminUser.query.filter_by(username='denis333rus').first()
+		if admin and not admin.full_name:
+			admin.full_name = 'ИВАНОВ ИВАН ИВАНОВИЧ'
+			admin.position = 'Руководитель следственного управления'
+			admin.rank = 'Полковник юстиции'
+			db.session.commit()
 
 
 def ensure_site_info() -> None:
@@ -160,6 +175,15 @@ def ensure_schema_updates() -> None:
 	admin_existing = {row[1] for row in admin_cols}
 	if 'role' not in admin_existing:
 		db.session.execute(text("ALTER TABLE admin_user ADD COLUMN role VARCHAR(50) DEFAULT 'investigator'"))
+		db.session.commit()
+	if 'full_name' not in admin_existing:
+		db.session.execute(text('ALTER TABLE admin_user ADD COLUMN full_name VARCHAR(150)'))
+		db.session.commit()
+	if 'position' not in admin_existing:
+		db.session.execute(text('ALTER TABLE admin_user ADD COLUMN position VARCHAR(100)'))
+		db.session.commit()
+	if 'rank' not in admin_existing:
+		db.session.execute(text('ALTER TABLE admin_user ADD COLUMN rank VARCHAR(100)'))
 		db.session.commit()
 
 
@@ -307,9 +331,12 @@ def register_routes(app: Flask) -> None:
 		site = SiteInfo.query.first()
 		# Get unread notifications count for logged in users
 		unread_count = 0
+		current_user = None
 		if session.get('admin_logged_in'):
 			unread_count = Notification.query.filter_by(is_read=False).count()
-		return dict(site=site, unread_notifications=unread_count)
+			username = session.get('admin_username')
+			current_user = AdminUser.query.filter_by(username=username).first()
+		return dict(site=site, unread_notifications=unread_count, current_user=current_user)
 
 	@app.route('/')
 	def index():
@@ -378,10 +405,28 @@ def register_routes(app: Flask) -> None:
 			db.session.add(notification)
 			db.session.commit()
 			
-			flash('Заявка на работу отправлена. Мы рассмотрим её в ближайшее время.', 'success')
-			return redirect(url_for('job_application'))
+			flash('Заявка на работу отправлена. Мы рассмотрим её в ближайшее время. Вы можете отслеживать статус заявки по логину.', 'success')
+			return redirect(url_for('track_application'))
 		
 		return render_template('job_application.html')
+
+	@app.route('/track-application', methods=['GET', 'POST'])
+	def track_application():
+		if request.method == 'POST':
+			username = request.form.get('username', '').strip()
+			if not username:
+				flash('Введите логин для отслеживания', 'warning')
+				return render_template('track_application.html')
+			
+			# Find application by desired username
+			application = JobApplication.query.filter_by(desired_username=username).first()
+			if not application:
+				flash('Заявка с таким логином не найдена', 'danger')
+				return render_template('track_application.html')
+			
+			return render_template('track_application.html', application=application)
+		
+		return render_template('track_application.html')
 
 	@app.route('/news/<int:news_id>')
 	def news_detail(news_id: int):
@@ -427,11 +472,22 @@ def register_routes(app: Flask) -> None:
 	@app.route('/admin')
 	@login_required
 	def admin_dashboard():
-		total_news = News.query.count()
-		published_news = News.query.filter_by(is_published=True).count()
-		new_feedback = Feedback.query.filter_by(status='new').count()
-		notifications = Notification.query.order_by(Notification.created_at.desc()).limit(10).all()
-		return render_template('admin/dashboard.html', total_news=total_news, published_news=published_news, new_feedback=new_feedback, notifications=notifications)
+		# Check user role and redirect accordingly
+		username = session.get('admin_username')
+		user = AdminUser.query.filter_by(username=username).first()
+		
+		if user and user.role == 'admin':
+			# Full admin dashboard
+			total_news = News.query.count()
+			published_news = News.query.filter_by(is_published=True).count()
+			new_feedback = Feedback.query.filter_by(status='new').count()
+			notifications = Notification.query.order_by(Notification.created_at.desc()).limit(10).all()
+			return render_template('admin/dashboard.html', total_news=total_news, published_news=published_news, new_feedback=new_feedback, notifications=notifications)
+		else:
+			# Investigator dashboard
+			my_news = News.query.filter_by(is_published=True).order_by(News.created_at.desc()).limit(5).all()
+			notifications = Notification.query.order_by(Notification.created_at.desc()).limit(5).all()
+			return render_template('Sledovatel.html', my_news=my_news, notifications=notifications)
 
 	def require_admin_role():
 		username = session.get('admin_username')
@@ -494,13 +550,16 @@ def register_routes(app: Flask) -> None:
 			username = request.form.get('username', '').strip()
 			password = request.form.get('password', '')
 			role = request.form.get('role', 'investigator')
+			full_name = request.form.get('full_name', '').strip()
+			position = request.form.get('position', '').strip()
+			rank = request.form.get('rank', '').strip()
 			if not username or not password:
 				flash('Укажите логин и пароль', 'warning')
 				return render_template('admin/user_form.html', action='new', roles=roles)
 			if AdminUser.query.filter_by(username=username).first():
 				flash('Пользователь с таким логином уже существует', 'danger')
 				return render_template('admin/user_form.html', action='new', roles=roles)
-			u = AdminUser(username=username, role=role)
+			u = AdminUser(username=username, role=role, full_name=full_name, position=position, rank=rank)
 			u.set_password(password)
 			db.session.add(u)
 			db.session.commit()
@@ -518,6 +577,9 @@ def register_routes(app: Flask) -> None:
 			user.username = request.form.get('username', '').strip()
 			role = request.form.get('role', user.role)
 			user.role = role
+			user.full_name = request.form.get('full_name', '').strip()
+			user.position = request.form.get('position', '').strip()
+			user.rank = request.form.get('rank', '').strip()
 			new_password = request.form.get('password', '')
 			if new_password:
 				user.set_password(new_password)
@@ -577,7 +639,13 @@ def register_routes(app: Flask) -> None:
 			action = request.form.get('action')
 			if action == 'approve':
 				# Create user account
-				user = AdminUser(username=application.desired_username, role='investigator')
+				user = AdminUser(
+					username=application.desired_username, 
+					role='investigator',
+					full_name=application.full_name,
+					position='Следователь',
+					rank='Лейтенант юстиции'
+				)
 				user.set_password(application.desired_password)
 				db.session.add(user)
 				
