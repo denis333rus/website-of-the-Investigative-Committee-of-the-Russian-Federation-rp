@@ -1356,9 +1356,6 @@ def register_routes(app: Flask) -> None:
 				flash('Заполните все поля', 'warning')
 				return redirect(url_for('chat'))
 			
-			if not privacy_agreement:
-				flash('Необходимо согласиться с Политикой конфиденциальности', 'warning')
-				return redirect(url_for('chat'))
 			
 			# Определяем тип отправителя
 			sender_type = 'civilian'
