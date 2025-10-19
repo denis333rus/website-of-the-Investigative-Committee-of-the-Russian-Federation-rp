@@ -737,9 +737,8 @@ def register_routes(app: Flask) -> None:
 		news = News.query.filter_by(is_published=True, parent_id=None).order_by(News.created_at.desc()).all()
 		return render_template('index.html', news=news)
 
-	@app.route('/privacy-policy')
-	def privacy_policy():
-		return render_template('privacy_policy.html')
+
+	
 
 	@app.route('/feedback', methods=['GET', 'POST'])
 	def feedback():
@@ -790,13 +789,6 @@ def register_routes(app: Flask) -> None:
 					question4=question4, question5=question5, question6=question6,
 					question7=question7, question8=question8)
 			
-			if not privacy_agreement:
-				flash('Необходимо согласиться с Политикой конфиденциальности', 'warning')
-				return render_template('job_application.html', 
-					full_name=full_name, desired_username=desired_username, 
-					question1=question1, question2=question2, question3=question3,
-					question4=question4, question5=question5, question6=question6,
-					question7=question7, question8=question8)
 			
 			# Check if username already exists
 			if AdminUser.query.filter_by(username=desired_username).first():
