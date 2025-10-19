@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Отзывы - СК РФ{% endblock %}
+
+{% block content %}
+<div class="row">
+	<div class="col-lg-8">
+		<div class="card">
+			<div class="card-header bg-danger text-white">
+				<h4 class="mb-0"><i class="bi bi-star-fill"></i> Отзывы о работе СК РФ</h4>
+			</div>
+			<div class="card-body">
+				{% if reviews %}
+					{% for review in reviews %}
+					<div class="review-item border-bottom pb-3 mb-3">
+						<div class="d-flex justify-content-between align-items-start mb-2">
+							<h6 class="mb-0 fw-bold">{{ review.author_name }}</h6>
+							<small class="text-muted">{{ review.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+						</div>
+						<div class="mb-2">
+							{% for i in range(1, 6) %}
+								{% if i <= review.rating %}
+									<i class="bi bi-star-fill text-warning"></i>
+								{% else %}
+									<i class="bi bi-star text-muted"></i>
+								{% endif %}
+							{% endfor %}
+							<span class="ms-2 text-muted">({{ review.rating }}/5)</span>
+						</div>
+						<h6 class="text-danger mb-2">{{ review.title }}</h6>
+						<p class="mb-0">{{ review.content }}</p>
+					</div>
+					{% endfor %}
+				{% else %}
+					<div class="text-center py-5">
+						<i class="bi bi-star display-1 text-muted"></i>
+						<h5 class="text-muted mt-3">Пока нет отзывов</h5>
+						<p class="text-muted">Станьте первым, кто оставит отзыв о работе СК РФ</p>
+					</div>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+	
+	<div class="col-lg-4">
+		<div class="card">
+			<div class="card-header bg-danger text-white">
+				<h5 class="mb-0"><i class="bi bi-pencil-square"></i> Оставить отзыв</h5>
+			</div>
+			<div class="card-body">
+				<form method="POST">
+					<div class="mb-3">
+						<label for="author_name" class="form-label">ФИО</label>
+						<input type="text" class="form-control" id="author_name" name="author_name" 
+							   placeholder="ИВАНОВ ИВАН ИВАНОВИЧ" required style="text-transform: uppercase;">
+					</div>
+					
+					<div class="mb-3">
+						<label for="rating" class="form-label">Оценка</label>
+						<select class="form-select" id="rating" name="rating" required>
+							<option value="">Выберите оценку</option>
+							<option value="1">1 звезда - Очень плохо</option>
+							<option value="2">2 звезды - Плохо</option>
+							<option value="3">3 звезды - Удовлетворительно</option>
+							<option value="4">4 звезды - Хорошо</option>
+							<option value="5">5 звезд - Отлично</option>
+						</select>
+					</div>
+					
+					<div class="mb-3">
+						<label for="title" class="form-label">Заголовок отзыва</label>
+						<input type="text" class="form-control" id="title" name="title" 
+							   placeholder="Краткое описание" required>
+					</div>
+					
+					<div class="mb-3">
+						<label for="content" class="form-label">Текст отзыва</label>
+						<textarea class="form-control" id="content" name="content" rows="4" 
+								  placeholder="Подробно опишите ваше мнение о работе СК РФ" required></textarea>
+					</div>
+					
+					
+					<button type="submit" class="btn btn-danger w-100">
+						<i class="bi bi-send"></i> Отправить отзыв
+					</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+// Auto-uppercase for FIO field
+document.getElementById('author_name').addEventListener('input', function() {
+	this.value = this.value.toUpperCase();
+});
+</script>
+{% endblock %}

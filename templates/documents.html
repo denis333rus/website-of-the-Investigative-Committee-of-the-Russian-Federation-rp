@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Документооборот СК РФ{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+	<h2><i class="bi bi-file-text"></i> Документооборот СК РФ</h2>
+	<button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#newDocumentModal">
+		<i class="bi bi-plus-circle"></i> Создать документ
+	</button>
+</div>
+
+<div class="row">
+	<div class="col-lg-8">
+		<!-- Мои документы -->
+		<div class="card mb-4">
+			<div class="card-header bg-danger text-white">
+				<h5 class="mb-0"><i class="bi bi-person-lines-fill"></i> Мои документы</h5>
+			</div>
+			<div class="card-body">
+				{% if user_documents %}
+					{% for document in user_documents %}
+					<div class="document-item border-bottom pb-3 mb-3">
+						<div class="d-flex justify-content-between align-items-start mb-2">
+							<h6 class="mb-0 fw-bold">{{ document.title }}</h6>
+							<div>
+								{% if document.status == 'pending' %}
+									<span class="badge bg-warning">Ожидает одобрения</span>
+								{% elif document.status == 'approved' %}
+									<span class="badge bg-success">Одобрен</span>
+								{% elif document.status == 'rejected' %}
+									<span class="badge bg-danger">Отклонен</span>
+								{% endif %}
+								<small class="text-muted ms-2">{{ document.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+							</div>
+						</div>
+						<div class="mb-2">
+							<span class="badge bg-secondary">{{ document.document_type }}</span>
+						</div>
+						<p class="mb-2 text-muted">{{ document.content[:200] }}{% if document.content|length > 200 %}...{% endif %}</p>
+						{% if document.file_url %}
+						<div class="mb-2">
+							<a href="{{ document.file_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+								<i class="bi bi-download"></i> Скачать файл
+							</a>
+						</div>
+						{% endif %}
+					</div>
+					{% endfor %}
+				{% else %}
+					<div class="text-center py-4">
+						<i class="bi bi-file-text display-4 text-muted"></i>
+						<h6 class="text-muted mt-2">У вас пока нет документов</h6>
+						<p class="text-muted">Создайте свой первый документ</p>
+					</div>
+				{% endif %}
+			</div>
+		</div>
+
+		<!-- Одобренные документы -->
+		<div class="card">
+			<div class="card-header bg-success text-white">
+				<h5 class="mb-0"><i class="bi bi-check-circle"></i> Одобренные документы</h5>
+			</div>
+			<div class="card-body">
+				{% if approved_documents %}
+					{% for document in approved_documents %}
+					<div class="document-item border-bottom pb-3 mb-3">
+						<div class="d-flex justify-content-between align-items-start mb-2">
+							<h6 class="mb-0 fw-bold">{{ document.title }}</h6>
+							<small class="text-muted">{{ document.approved_at.strftime('%d.%m.%Y %H:%M') }}</small>
+						</div>
+						<div class="mb-2">
+							<span class="badge bg-secondary">{{ document.document_type }}</span>
+							<span class="text-muted ms-2">Автор: {{ document.author.full_name }}</span>
+						</div>
+						<p class="mb-2">{{ document.content[:200] }}{% if document.content|length > 200 %}...{% endif %}</p>
+						{% if document.file_url %}
+						<div class="mb-2">
+							<a href="{{ document.file_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+								<i class="bi bi-download"></i> Скачать файл
+							</a>
+						</div>
+						{% endif %}
+					</div>
+					{% endfor %}
+				{% else %}
+					<div class="text-center py-4">
+						<i class="bi bi-check-circle display-4 text-muted"></i>
+						<h6 class="text-muted mt-2">Одобренных документов пока нет</h6>
+					</div>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+	
+	<div class="col-lg-4">
+		<div class="card">
+			<div class="card-header">
+				<h5 class="mb-0"><i class="bi bi-info-circle"></i> Информация</h5>
+			</div>
+			<div class="card-body">
+				<div class="alert alert-info">
+					<h6><i class="bi bi-lightbulb"></i> Как это работает:</h6>
+					<ul class="mb-0 small">
+						<li>Создайте документ (постановление, протокол и т.д.)</li>
+						<li>Документ отправится на одобрение администратору</li>
+						<li>После одобрения документ появится в общем списке</li>
+						<li>Вы можете отслеживать статус своих документов</li>
+					</ul>
+				</div>
+				
+				<div class="alert alert-warning">
+					<h6><i class="bi bi-exclamation-triangle"></i> Важно:</h6>
+					<ul class="mb-0 small">
+						<li>Проверьте документ перед отправкой</li>
+						<li>Используйте понятные названия</li>
+						<li>При необходимости прикрепите файл</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Modal для создания документа -->
+<div class="modal fade" id="newDocumentModal" tabindex="-1">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header bg-danger text-white">
+				<h5 class="modal-title"><i class="bi bi-file-plus"></i> Создать документ</h5>
+				<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+			</div>
+			<form method="POST">
+				<div class="modal-body">
+					<div class="mb-3">
+						<label for="title" class="form-label">Название документа</label>
+						<input type="text" class="form-control" id="title" name="title" 
+							   placeholder="Например: Постановление о возбуждении уголовного дела" required>
+					</div>
+					
+					<div class="mb-3">
+						<label for="document_type" class="form-label">Тип документа</label>
+						<select class="form-select" id="document_type" name="document_type" required>
+							<option value="">Выберите тип документа</option>
+							<option value="Постановление">Постановление</option>
+							<option value="Протокол">Протокол</option>
+							<option value="Определение">Определение</option>
+							<option value="Решение">Решение</option>
+							<option value="Справка">Справка</option>
+							<option value="Другой">Другой</option>
+						</select>
+					</div>
+					
+					<div class="mb-3">
+						<label for="content" class="form-label">Содержание документа</label>
+						<textarea class="form-control" id="content" name="content" rows="6" 
+								  placeholder="Введите текст документа..." required></textarea>
+					</div>
+					
+					<div class="mb-3">
+						<label for="file_url" class="form-label">Ссылка на файл (необязательно)</label>
+						<input type="url" class="form-control" id="file_url" name="file_url" 
+							   placeholder="https://example.com/file.pdf">
+						<div class="form-text">Можете прикрепить ссылку на файл документа</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+					<button type="submit" class="btn btn-danger">
+						<i class="bi bi-send"></i> Отправить на одобрение
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+{% endblock %}

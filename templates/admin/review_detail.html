@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Отзыв #{{ review.id }} - Админ-панель{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+	<h2><i class="bi bi-star"></i> Отзыв #{{ review.id }}</h2>
+	<a href="{{ url_for('admin_reviews') }}" class="btn btn-outline-secondary">
+		<i class="bi bi-arrow-left"></i> Назад к списку
+	</a>
+</div>
+
+<div class="row">
+	<div class="col-lg-8">
+		<div class="card">
+			<div class="card-header">
+				<div class="d-flex justify-content-between align-items-center">
+					<h5 class="mb-0">Содержание отзыва</h5>
+					<span class="badge bg-{% if review.status == 'pending' %}warning{% elif review.status == 'approved' %}success{% else %}danger{% endif %}">
+						{% if review.status == 'pending' %}Ожидает модерации
+						{% elif review.status == 'approved' %}Одобрен
+						{% else %}Отклонен{% endif %}
+					</span>
+				</div>
+			</div>
+			<div class="card-body">
+				<div class="mb-3">
+					<strong>Автор:</strong> {{ review.author_name }}
+				</div>
+				
+				<div class="mb-3">
+					<strong>Оценка:</strong>
+					{% for i in range(1, 6) %}
+						{% if i <= review.rating %}
+							<i class="bi bi-star-fill text-warning"></i>
+						{% else %}
+							<i class="bi bi-star text-muted"></i>
+						{% endif %}
+					{% endfor %}
+					<span class="ms-2">{{ review.rating }}/5</span>
+				</div>
+				
+				<div class="mb-3">
+					<strong>Заголовок:</strong>
+					<h6 class="text-danger mt-1">{{ review.title }}</h6>
+				</div>
+				
+				<div class="mb-3">
+					<strong>Содержание:</strong>
+					<div class="mt-2 p-3 bg-light rounded">
+						{{ review.content|replace('\n', '<br>')|safe }}
+					</div>
+				</div>
+				
+				<div class="mb-3">
+					<strong>Дата создания:</strong> {{ review.created_at.strftime('%d.%m.%Y %H:%M') }}
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="col-lg-4">
+		<div class="card">
+			<div class="card-header">
+				<h5 class="mb-0">Действия</h5>
+			</div>
+			<div class="card-body">
+				{% if review.status == 'pending' %}
+				<form method="POST" action="{{ url_for('admin_review_approve', review_id=review.id) }}" class="mb-3">
+					<button type="submit" class="btn btn-success w-100">
+						<i class="bi bi-check-circle"></i> Одобрить отзыв
+					</button>
+				</form>
+				
+				<form method="POST" action="{{ url_for('admin_review_reject', review_id=review.id) }}">
+					<button type="submit" class="btn btn-danger w-100">
+						<i class="bi bi-x-circle"></i> Отклонить отзыв
+					</button>
+				</form>
+				{% else %}
+				<div class="alert alert-info">
+					<i class="bi bi-info-circle"></i>
+					Отзыв уже обработан
+				</div>
+				{% endif %}
+			</div>
+		</div>
+		
+		<div class="card mt-3">
+			<div class="card-header">
+				<h6 class="mb-0">Информация</h6>
+			</div>
+			<div class="card-body">
+				<small class="text-muted">
+					<strong>ID:</strong> {{ review.id }}<br>
+					<strong>Статус:</strong> {{ review.status }}<br>
+					<strong>Создан:</strong> {{ review.created_at.strftime('%d.%m.%Y %H:%M') }}
+				</small>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

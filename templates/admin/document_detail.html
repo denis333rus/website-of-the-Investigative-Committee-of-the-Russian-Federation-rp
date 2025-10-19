@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Документ #{{ document.id }} - Админ-панель{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+	<h2><i class="bi bi-file-text"></i> Документ #{{ document.id }}</h2>
+	<a href="{{ url_for('admin_documents') }}" class="btn btn-outline-secondary">
+		<i class="bi bi-arrow-left"></i> Назад к списку
+	</a>
+</div>
+
+<div class="row">
+	<div class="col-lg-8">
+		<div class="card">
+			<div class="card-header">
+				<div class="d-flex justify-content-between align-items-center">
+					<h5 class="mb-0">Содержание документа</h5>
+					<span class="badge bg-{% if document.status == 'pending' %}warning{% elif document.status == 'approved' %}success{% else %}danger{% endif %}">
+						{% if document.status == 'pending' %}Ожидает одобрения
+						{% elif document.status == 'approved' %}Одобрен
+						{% else %}Отклонен{% endif %}
+					</span>
+				</div>
+			</div>
+			<div class="card-body">
+				<div class="mb-3">
+					<strong>Название:</strong>
+					<h6 class="text-danger mt-1">{{ document.title }}</h6>
+				</div>
+				
+				<div class="mb-3">
+					<strong>Тип документа:</strong>
+					<span class="badge bg-secondary ms-2">{{ document.document_type }}</span>
+				</div>
+				
+				<div class="mb-3">
+					<strong>Автор:</strong> {{ document.author.full_name }}
+					<small class="text-muted ms-2">({{ document.author.position }}, {{ document.author.rank }})</small>
+				</div>
+				
+				<div class="mb-3">
+					<strong>Содержание:</strong>
+					<div class="mt-2 p-3 bg-light rounded">
+						{{ document.content|replace('\n', '<br>')|safe }}
+					</div>
+				</div>
+				
+				{% if document.file_url %}
+				<div class="mb-3">
+					<strong>Прикрепленный файл:</strong>
+					<div class="mt-2">
+						<a href="{{ document.file_url }}" target="_blank" class="btn btn-outline-primary">
+							<i class="bi bi-download"></i> Скачать файл
+						</a>
+					</div>
+				</div>
+				{% endif %}
+				
+				<div class="mb-3">
+					<strong>Дата создания:</strong> {{ document.created_at.strftime('%d.%m.%Y %H:%M') }}
+				</div>
+				
+				{% if document.approved_at %}
+				<div class="mb-3">
+					<strong>Дата одобрения:</strong> {{ document.approved_at.strftime('%d.%m.%Y %H:%M') }}
+				</div>
+				{% endif %}
+				
+				{% if document.approved_by %}
+				<div class="mb-3">
+					<strong>Одобрил:</strong> {{ document.approved_by.full_name }}
+				</div>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+	
+	<div class="col-lg-4">
+		<div class="card">
+			<div class="card-header">
+				<h5 class="mb-0">Действия</h5>
+			</div>
+			<div class="card-body">
+				{% if document.status == 'pending' %}
+				<form method="POST" action="{{ url_for('admin_document_approve', document_id=document.id) }}" class="mb-3">
+					<button type="submit" class="btn btn-success w-100">
+						<i class="bi bi-check-circle"></i> Одобрить документ
+					</button>
+				</form>
+				
+				<form method="POST" action="{{ url_for('admin_document_reject', document_id=document.id) }}">
+					<button type="submit" class="btn btn-danger w-100">
+						<i class="bi bi-x-circle"></i> Отклонить документ
+					</button>
+				</form>
+				{% else %}
+				<div class="alert alert-info">
+					<i class="bi bi-info-circle"></i>
+					Документ уже обработан
+				</div>
+				{% endif %}
+			</div>
+		</div>
+		
+		<div class="card mt-3">
+			<div class="card-header">
+				<h6 class="mb-0">Информация</h6>
+			</div>
+			<div class="card-body">
+				<small class="text-muted">
+					<strong>ID:</strong> {{ document.id }}<br>
+					<strong>Статус:</strong> {{ document.status }}<br>
+					<strong>Создан:</strong> {{ document.created_at.strftime('%d.%m.%Y %H:%M') }}<br>
+					<strong>Автор ID:</strong> {{ document.author_id }}
+				</small>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

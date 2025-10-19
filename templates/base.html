@@ -40,9 +40,12 @@
 					{% if current_user and current_user.role == 'admin' %}
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_users_list') }}">Пользователи</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_job_applications') }}">Заявки на работу</a></li>
+					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_reviews') }}">Отзывы</a></li>
+					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_documents') }}">Документооборот</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_dashboard') }}">Админка</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_site_settings') }}">Лидер</a></li>
 					{% else %}
+					<li class="nav-item"><a class="nav-link" href="{{ url_for('documents') }}">Документооборот</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_dashboard') }}">Рабочее место</a></li>
 					{% endif %}
 					<li class="nav-item">
@@ -60,6 +63,7 @@
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('feedback') }}">Интернет-приёмная</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('job_application') }}">Приём на работу</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('track_application') }}">Отследить заявку</a></li>
+					<li class="nav-item"><a class="nav-link" href="{{ url_for('reviews') }}">Отзывы</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_login') }}">Вход</a></li>
 					{% endif %}
 				</ul>

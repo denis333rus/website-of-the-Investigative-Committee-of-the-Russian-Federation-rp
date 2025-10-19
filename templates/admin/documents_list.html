@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Управление документами - Админ-панель{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+	<h2><i class="bi bi-file-text"></i> Управление документами</h2>
+	<a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+		<i class="bi bi-arrow-left"></i> Назад в админку
+	</a>
+</div>
+
+<div class="card">
+	<div class="card-header">
+		<h5 class="mb-0">Все документы</h5>
+	</div>
+	<div class="card-body">
+		{% if documents %}
+		<div class="table-responsive">
+			<table class="table table-hover">
+				<thead>
+					<tr>
+						<th>ID</th>
+						<th>Название</th>
+						<th>Тип</th>
+						<th>Автор</th>
+						<th>Статус</th>
+						<th>Дата создания</th>
+						<th>Действия</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for document in documents %}
+					<tr>
+						<td>{{ document.id }}</td>
+						<td>
+							<div class="fw-bold">{{ document.title }}</div>
+							<small class="text-muted">{{ document.content[:100] }}{% if document.content|length > 100 %}...{% endif %}</small>
+						</td>
+						<td>
+							<span class="badge bg-secondary">{{ document.document_type }}</span>
+						</td>
+						<td>{{ document.author.full_name }}</td>
+						<td>
+							{% if document.status == 'pending' %}
+								<span class="badge bg-warning">Ожидает</span>
+							{% elif document.status == 'approved' %}
+								<span class="badge bg-success">Одобрен</span>
+							{% elif document.status == 'rejected' %}
+								<span class="badge bg-danger">Отклонен</span>
+							{% endif %}
+						</td>
+						<td>{{ document.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+						<td>
+							<a href="{{ url_for('admin_document_detail', document_id=document.id) }}" 
+							   class="btn btn-sm btn-outline-primary">
+								<i class="bi bi-eye"></i> Просмотр
+							</a>
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+		{% else %}
+		<div class="text-center py-5">
+			<i class="bi bi-file-text display-1 text-muted"></i>
+			<h5 class="text-muted mt-3">Документов пока нет</h5>
+		</div>
+		{% endif %}
+	</div>
+</div>
+{% endblock %}

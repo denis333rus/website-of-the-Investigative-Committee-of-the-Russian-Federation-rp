@@ -19,28 +19,86 @@
 			<label class="form-label">Должность</label>
 			<select class="form-select" name="position">
 				<option value="">Выберите должность</option>
+				
+				<!-- Младший состав -->
+				<option value="Младший следователь" {% if user and user.position=='Младший следователь' %}selected{% endif %}>Младший следователь</option>
 				<option value="Следователь" {% if user and user.position=='Следователь' %}selected{% endif %}>Следователь</option>
 				<option value="Старший следователь" {% if user and user.position=='Старший следователь' %}selected{% endif %}>Старший следователь</option>
 				<option value="Следователь по особо важным делам" {% if user and user.position=='Следователь по особо важным делам' %}selected{% endif %}>Следователь по особо важным делам</option>
+				
+				<!-- Руководящий состав отделов -->
 				<option value="Заместитель руководителя следственного отдела" {% if user and user.position=='Заместитель руководителя следственного отдела' %}selected{% endif %}>Заместитель руководителя следственного отдела</option>
 				<option value="Руководитель следственного отдела" {% if user and user.position=='Руководитель следственного отдела' %}selected{% endif %}>Руководитель следственного отдела</option>
+				
+				<!-- Руководящий состав управлений -->
 				<option value="Заместитель руководителя следственного управления" {% if user and user.position=='Заместитель руководителя следственного управления' %}selected{% endif %}>Заместитель руководителя следственного управления</option>
 				<option value="Руководитель следственного управления" {% if user and user.position=='Руководитель следственного управления' %}selected{% endif %}>Руководитель следственного управления</option>
+				
+				<!-- Специализированные должности -->
+				<option value="Следователь-криминалист" {% if user and user.position=='Следователь-криминалист' %}selected{% endif %}>Следователь-криминалист</option>
+				<option value="Старший следователь-криминалист" {% if user and user.position=='Старший следователь-криминалист' %}selected{% endif %}>Старший следователь-криминалист</option>
+				<option value="Младший криминалист" {% if user and user.position=='Младший криминалист' %}selected{% endif %}>Младший криминалист</option>
+				<option value="Криминалист" {% if user and user.position=='Криминалист' %}selected{% endif %}>Криминалист</option>
+				<option value="Старший криминалист" {% if user and user.position=='Старший криминалист' %}selected{% endif %}>Старший криминалист</option>
+				<option value="Ведущий криминалист" {% if user and user.position=='Ведущий криминалист' %}selected{% endif %}>Ведущий криминалист</option>
+				<option value="Главный криминалист" {% if user and user.position=='Главный криминалист' %}selected{% endif %}>Главный криминалист</option>
+				<option value="Руководитель криминалистического отдела" {% if user and user.position=='Руководитель криминалистического отдела' %}selected{% endif %}>Руководитель криминалистического отдела</option>
+				<option value="Заместитель руководителя криминалистического отдела" {% if user and user.position=='Заместитель руководителя криминалистического отдела' %}selected{% endif %}>Заместитель руководителя криминалистического отдела</option>
+				<option value="Следователь по расследованию преступлений в сфере экономики" {% if user and user.position=='Следователь по расследованию преступлений в сфере экономики' %}selected{% endif %}>Следователь по расследованию преступлений в сфере экономики</option>
+				<option value="Следователь по расследованию преступлений против личности" {% if user and user.position=='Следователь по расследованию преступлений против личности' %}selected{% endif %}>Следователь по расследованию преступлений против личности</option>
+				<option value="Следователь по расследованию преступлений против государственной власти" {% if user and user.position=='Следователь по расследованию преступлений против государственной власти' %}selected{% endif %}>Следователь по расследованию преступлений против государственной власти</option>
+				
+				<!-- Высшее руководство -->
+				<option value="Первый заместитель руководителя следственного управления" {% if user and user.position=='Первый заместитель руководителя следственного управления' %}selected{% endif %}>Первый заместитель руководителя следственного управления</option>
+				<option value="Заместитель председателя СК РФ" {% if user and user.position=='Заместитель председателя СК РФ' %}selected{% endif %}>Заместитель председателя СК РФ</option>
+				<option value="Первый заместитель председателя СК РФ" {% if user and user.position=='Первый заместитель председателя СК РФ' %}selected{% endif %}>Первый заместитель председателя СК РФ</option>
+				<option value="Председатель СК РФ" {% if user and user.position=='Председатель СК РФ' %}selected{% endif %}>Председатель СК РФ</option>
+				
+				<!-- Специальные должности -->
+				<option value="Следователь по расследованию преступлений в сфере информационных технологий" {% if user and user.position=='Следователь по расследованию преступлений в сфере информационных технологий' %}selected{% endif %}>Следователь по расследованию преступлений в сфере информационных технологий</option>
+				<option value="Следователь по расследованию преступлений в сфере экологии" {% if user and user.position=='Следователь по расследованию преступлений в сфере экологии' %}selected{% endif %}>Следователь по расследованию преступлений в сфере экологии</option>
+				<option value="Следователь по расследованию преступлений в сфере коррупции" {% if user and user.position=='Следователь по расследованию преступлений в сфере коррупции' %}selected{% endif %}>Следователь по расследованию преступлений в сфере коррупции</option>
 			</select>
 		</div>
 		<div class="mb-3">
 			<label class="form-label">Звание</label>
 			<select class="form-select" name="rank">
 				<option value="">Выберите звание</option>
+				
+				<!-- Младшие офицеры -->
+				<option value="Младший лейтенант юстиции" {% if user and user.rank=='Младший лейтенант юстиции' %}selected{% endif %}>Младший лейтенант юстиции</option>
 				<option value="Лейтенант юстиции" {% if user and user.rank=='Лейтенант юстиции' %}selected{% endif %}>Лейтенант юстиции</option>
 				<option value="Старший лейтенант юстиции" {% if user and user.rank=='Старший лейтенант юстиции' %}selected{% endif %}>Старший лейтенант юстиции</option>
 				<option value="Капитан юстиции" {% if user and user.rank=='Капитан юстиции' %}selected{% endif %}>Капитан юстиции</option>
+				
+				<!-- Старшие офицеры -->
 				<option value="Майор юстиции" {% if user and user.rank=='Майор юстиции' %}selected{% endif %}>Майор юстиции</option>
 				<option value="Подполковник юстиции" {% if user and user.rank=='Подполковник юстиции' %}selected{% endif %}>Подполковник юстиции</option>
 				<option value="Полковник юстиции" {% if user and user.rank=='Полковник юстиции' %}selected{% endif %}>Полковник юстиции</option>
+				
+				<!-- Генералы -->
 				<option value="Генерал-майор юстиции" {% if user and user.rank=='Генерал-майор юстиции' %}selected{% endif %}>Генерал-майор юстиции</option>
 				<option value="Генерал-лейтенант юстиции" {% if user and user.rank=='Генерал-лейтенант юстиции' %}selected{% endif %}>Генерал-лейтенант юстиции</option>
 				<option value="Генерал-полковник юстиции" {% if user and user.rank=='Генерал-полковник юстиции' %}selected{% endif %}>Генерал-полковник юстиции</option>
+				<option value="Генерал юстиции" {% if user and user.rank=='Генерал юстиции' %}selected{% endif %}>Генерал юстиции</option>
+				
+				<!-- Специальные звания -->
+				<option value="Советник юстиции 1 класса" {% if user and user.rank=='Советник юстиции 1 класса' %}selected{% endif %}>Советник юстиции 1 класса</option>
+				<option value="Советник юстиции 2 класса" {% if user and user.rank=='Советник юстиции 2 класса' %}selected{% endif %}>Советник юстиции 2 класса</option>
+				<option value="Советник юстиции 3 класса" {% if user and user.rank=='Советник юстиции 3 класса' %}selected{% endif %}>Советник юстиции 3 класса</option>
+				<option value="Младший советник юстиции" {% if user and user.rank=='Младший советник юстиции' %}selected{% endif %}>Младший советник юстиции</option>
+				<option value="Советник юстиции" {% if user and user.rank=='Советник юстиции' %}selected{% endif %}>Советник юстиции</option>
+				<option value="Старший советник юстиции" {% if user and user.rank=='Старший советник юстиции' %}selected{% endif %}>Старший советник юстиции</option>
+				<option value="Государственный советник юстиции 3 класса" {% if user and user.rank=='Государственный советник юстиции 3 класса' %}selected{% endif %}>Государственный советник юстиции 3 класса</option>
+				<option value="Государственный советник юстиции 2 класса" {% if user and user.rank=='Государственный советник юстиции 2 класса' %}selected{% endif %}>Государственный советник юстиции 2 класса</option>
+				<option value="Государственный советник юстиции 1 класса" {% if user and user.rank=='Государственный советник юстиции 1 класса' %}selected{% endif %}>Государственный советник юстиции 1 класса</option>
+				
+				<!-- Звания для криминалистов -->
+				<option value="Младший специалист" {% if user and user.rank=='Младший специалист' %}selected{% endif %}>Младший специалист</option>
+				<option value="Специалист" {% if user and user.rank=='Специалист' %}selected{% endif %}>Специалист</option>
+				<option value="Старший специалист" {% if user and user.rank=='Старший специалист' %}selected{% endif %}>Старший специалист</option>
+				<option value="Ведущий специалист" {% if user and user.rank=='Ведущий специалист' %}selected{% endif %}>Ведущий специалист</option>
+				<option value="Главный специалист" {% if user and user.rank=='Главный специалист' %}selected{% endif %}>Главный специалист</option>
 			</select>
 		</div>
 		<div class="mb-3">

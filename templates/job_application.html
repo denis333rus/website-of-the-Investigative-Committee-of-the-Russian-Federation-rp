@@ -24,16 +24,36 @@
 				<div class="form-text">Пароль для входа в систему</div>
 			</div>
 			<div class="col-12">
-				<label class="form-label">Почему вы хотите работать в СК РФ?</label>
+				<label class="form-label">Почему вы хотите работать в СК РФ? <span class="text-danger">*</span></label>
 				<textarea class="form-control" name="question1" rows="3" required>{{ question1 or '' }}</textarea>
 			</div>
 			<div class="col-12">
-				<label class="form-label">Опишите ваш опыт работы (если есть)</label>
+				<label class="form-label">Опишите ваш опыт работы (если есть) <span class="text-danger">*</span></label>
 				<textarea class="form-control" name="question2" rows="3" required>{{ question2 or '' }}</textarea>
 			</div>
 			<div class="col-12">
-				<label class="form-label">Дополнительная информация о себе</label>
+				<label class="form-label">Дополнительная информация о себе <span class="text-danger">*</span></label>
 				<textarea class="form-control" name="question3" rows="3" required>{{ question3 or '' }}</textarea>
+			</div>
+			<div class="col-12">
+				<label class="form-label">Образование и квалификация</label>
+				<textarea class="form-control" name="question4" rows="3" placeholder="Укажите ваше образование, специальность, курсы повышения квалификации">{{ question4 or '' }}</textarea>
+			</div>
+			<div class="col-12">
+				<label class="form-label">Навыки и компетенции</label>
+				<textarea class="form-control" name="question5" rows="3" placeholder="Опишите ваши профессиональные навыки, знание языков, компьютерные программы">{{ question5 or '' }}</textarea>
+			</div>
+			<div class="col-12">
+				<label class="form-label">Мотивация и карьерные цели</label>
+				<textarea class="form-control" name="question6" rows="3" placeholder="Какие у вас цели в работе? Что вас мотивирует?">{{ question6 or '' }}</textarea>
+			</div>
+			<div class="col-12">
+				<label class="form-label">Готовность к командировкам и ненормированному графику</label>
+				<textarea class="form-control" name="question7" rows="3" placeholder="Готовы ли вы к командировкам, работе в выходные и праздники?">{{ question7 or '' }}</textarea>
+			</div>
+			<div class="col-12">
+				<label class="form-label">Дополнительная информация</label>
+				<textarea class="form-control" name="question8" rows="3" placeholder="Любая дополнительная информация, которую считаете важной">{{ question8 or '' }}</textarea>
 			</div>
 		</div>
 		<div class="mt-3">

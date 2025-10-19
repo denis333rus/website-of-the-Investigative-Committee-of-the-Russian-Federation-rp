@@ -21,6 +21,21 @@
 				<dt class="col-sm-3">Почему хотите работать в СК РФ?</dt><dd class="col-sm-9 prewrap">{{ application.question1 }}</dd>
 				<dt class="col-sm-3">Опыт работы</dt><dd class="col-sm-9 prewrap">{{ application.question2 }}</dd>
 				<dt class="col-sm-3">Дополнительная информация</dt><dd class="col-sm-9 prewrap">{{ application.question3 }}</dd>
+				{% if application.question4 %}
+				<dt class="col-sm-3">Образование и квалификация</dt><dd class="col-sm-9 prewrap">{{ application.question4 }}</dd>
+				{% endif %}
+				{% if application.question5 %}
+				<dt class="col-sm-3">Навыки и компетенции</dt><dd class="col-sm-9 prewrap">{{ application.question5 }}</dd>
+				{% endif %}
+				{% if application.question6 %}
+				<dt class="col-sm-3">Мотивация и карьерные цели</dt><dd class="col-sm-9 prewrap">{{ application.question6 }}</dd>
+				{% endif %}
+				{% if application.question7 %}
+				<dt class="col-sm-3">Готовность к командировкам</dt><dd class="col-sm-9 prewrap">{{ application.question7 }}</dd>
+				{% endif %}
+				{% if application.question8 %}
+				<dt class="col-sm-3">Дополнительная информация</dt><dd class="col-sm-9 prewrap">{{ application.question8 }}</dd>
+				{% endif %}
 			</dl>
 		</div>
 	</div>
