@@ -14,13 +14,29 @@ from email.mime.multipart import MIMEMultipart
 
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-DB_PATH = os.path.join(BASE_DIR, 'site.db')
+
+# Используем переменную окружения для URL базы данных
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+	# Для PostgreSQL на Railway
+	DB_PATH = DATABASE_URL
+else:
+	# Локальная SQLite база
+	DB_PATH = os.path.join(BASE_DIR, 'site.db')
 
 
 def create_app():
 	app = Flask(__name__)
 	app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change-this-secret-key')
-	app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DB_PATH
+	
+	# Настройка базы данных
+	if DATABASE_URL:
+		# PostgreSQL для Railway
+		app.config['SQLALCHEMY_DATABASE_URI'] = DB_PATH
+	else:
+		# SQLite для локальной разработки
+		app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DB_PATH
+	
 	app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 	app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'static', 'uploads')
 	app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
@@ -140,6 +156,19 @@ class Document(db.Model):
 	approved_by = db.relationship('AdminUser', foreign_keys=[approved_by_id], backref='approved_documents')
 
 
+class ChatMessage(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	message = db.Column(db.Text, nullable=False)
+	sender_id = db.Column(db.Integer, db.ForeignKey('admin_user.id'), nullable=True)  # null для гражданских
+	sender_name = db.Column(db.String(150), nullable=False)  # имя отправителя
+	sender_type = db.Column(db.String(20), nullable=False)  # 'employee' или 'civilian'
+	is_read = db.Column(db.Boolean, default=False, nullable=False)
+	created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+	
+	# Relationships
+	sender = db.relationship('AdminUser', foreign_keys=[sender_id], backref='sent_messages')
+
+
 def ensure_initial_admin() -> None:
 	if not AdminUser.query.first():
 		admin = AdminUser(username='denis333rus')
@@ -167,19 +196,54 @@ def ensure_site_info() -> None:
 
 
 def ensure_schema_updates() -> None:
-	"""Apply minimal in-place schema updates for SQLite when models change.
-
-	Currently ensures `leader_photo_url` exists on `site_info`.
+	"""Apply minimal in-place schema updates when models change.
+	
+	For SQLite: uses PRAGMA to check columns
+	For PostgreSQL: uses information_schema
 	"""
-	# Ensure the table exists before introspection
-	db.session.execute(text('CREATE TABLE IF NOT EXISTS site_info (id INTEGER PRIMARY KEY)'))
-	# Inspect current columns for site_info
-	pragma_rows = db.session.execute(text('PRAGMA table_info(site_info)')).all()
-	existing_columns = {row[1] for row in pragma_rows}
-	# Add missing column without dropping data
-	if 'leader_photo_url' not in existing_columns:
-		db.session.execute(text('ALTER TABLE site_info ADD COLUMN leader_photo_url VARCHAR(255)'))
-		db.session.commit()
+	if DATABASE_URL and 'postgresql' in DATABASE_URL:
+		# PostgreSQL - используем information_schema
+		try:
+			# Проверяем существование таблицы site_info
+			result = db.session.execute(text("""
+				SELECT EXISTS (
+					SELECT FROM information_schema.tables 
+					WHERE table_name = 'site_info'
+				);
+			""")).scalar()
+			
+			if not result:
+				# Создаем таблицу site_info если не существует
+				db.session.execute(text('CREATE TABLE site_info (id SERIAL PRIMARY KEY)'))
+				db.session.commit()
+			
+			# Проверяем существование колонки leader_photo_url
+			column_exists = db.session.execute(text("""
+				SELECT EXISTS (
+					SELECT FROM information_schema.columns 
+					WHERE table_name = 'site_info' AND column_name = 'leader_photo_url'
+				);
+			""")).scalar()
+			
+			if not column_exists:
+				db.session.execute(text('ALTER TABLE site_info ADD COLUMN leader_photo_url VARCHAR(255)'))
+				db.session.commit()
+		except Exception as e:
+			print(f"PostgreSQL schema update error: {e}")
+	else:
+		# SQLite - используем PRAGMA
+		try:
+			# Ensure the table exists before introspection
+			db.session.execute(text('CREATE TABLE IF NOT EXISTS site_info (id INTEGER PRIMARY KEY)'))
+			# Inspect current columns for site_info
+			pragma_rows = db.session.execute(text('PRAGMA table_info(site_info)')).all()
+			existing_columns = {row[1] for row in pragma_rows}
+			# Add missing column without dropping data
+			if 'leader_photo_url' not in existing_columns:
+				db.session.execute(text('ALTER TABLE site_info ADD COLUMN leader_photo_url VARCHAR(255)'))
+				db.session.commit()
+		except Exception as e:
+			print(f"SQLite schema update error: {e}")
 
 	# Ensure News.image_url exists
 	db.session.execute(text('CREATE TABLE IF NOT EXISTS news (id INTEGER PRIMARY KEY)'))
@@ -225,6 +289,9 @@ def ensure_schema_updates() -> None:
 	
 	# Ensure document table exists
 	db.session.execute(text('CREATE TABLE IF NOT EXISTS document (id INTEGER PRIMARY KEY, title TEXT, content TEXT, document_type TEXT, author_id INTEGER, status TEXT, file_url TEXT, approved_by_id INTEGER, created_at TEXT, approved_at TEXT)'))
+	
+	# Ensure chat_message table exists
+	db.session.execute(text('CREATE TABLE IF NOT EXISTS chat_message (id INTEGER PRIMARY KEY, message TEXT, sender_id INTEGER, sender_name TEXT, sender_type TEXT, is_read BOOLEAN, created_at TEXT)'))
 
 	# Ensure AdminUser.role exists
 	db.session.execute(text('CREATE TABLE IF NOT EXISTS admin_user (id INTEGER PRIMARY KEY)'))
@@ -669,6 +736,10 @@ def register_routes(app: Flask) -> None:
 	def index():
 		news = News.query.filter_by(is_published=True, parent_id=None).order_by(News.created_at.desc()).all()
 		return render_template('index.html', news=news)
+
+	@app.route('/privacy-policy')
+	def privacy_policy():
+		return render_template('privacy_policy.html')
 
 	@app.route('/feedback', methods=['GET', 'POST'])
 	def feedback():
@@ -1253,6 +1324,73 @@ def register_routes(app: Flask) -> None:
 		db.session.commit()
 		flash('Документ отклонен', 'info')
 		return redirect(url_for('admin_document_detail', document_id=document_id))
+
+	@app.route('/chat', methods=['GET', 'POST'])
+	def chat():
+		if request.method == 'POST':
+			message = request.form.get('message', '').strip()
+			sender_name = request.form.get('sender_name', '').strip()
+			
+			if not message or not sender_name:
+				flash('Заполните все поля', 'warning')
+				return redirect(url_for('chat'))
+			
+			# Определяем тип отправителя
+			sender_type = 'civilian'
+			sender_id = None
+			
+			# Если пользователь авторизован как сотрудник
+			if session.get('admin_logged_in'):
+				sender_type = 'employee'
+				sender_id = session.get('admin_user_id')
+				# Используем ФИО из профиля сотрудника
+				current_user = AdminUser.query.get(sender_id)
+				if current_user and current_user.full_name:
+					sender_name = current_user.full_name
+			
+			# Создаем сообщение
+			chat_message = ChatMessage(
+				message=message,
+				sender_id=sender_id,
+				sender_name=sender_name.upper(),
+				sender_type=sender_type
+			)
+			db.session.add(chat_message)
+			db.session.commit()
+			
+			flash('Сообщение отправлено', 'success')
+			return redirect(url_for('chat'))
+		
+		# Получаем все сообщения
+		messages = ChatMessage.query.order_by(ChatMessage.created_at.asc()).all()
+		
+		# Если пользователь авторизован, отмечаем сообщения как прочитанные
+		if session.get('admin_logged_in'):
+			ChatMessage.query.filter_by(is_read=False).update({'is_read': True})
+			db.session.commit()
+		
+		return render_template('chat.html', messages=messages)
+
+	@app.route('/admin/chat')
+	@login_required
+	def admin_chat():
+		# Получаем все сообщения
+		messages = ChatMessage.query.order_by(ChatMessage.created_at.asc()).all()
+		
+		# Отмечаем сообщения как прочитанные
+		ChatMessage.query.filter_by(is_read=False).update({'is_read': True})
+		db.session.commit()
+		
+		return render_template('admin/chat_admin.html', messages=messages)
+
+	@app.route('/admin/chat/delete/<int:message_id>', methods=['POST'])
+	@login_required
+	def admin_chat_delete(message_id: int):
+		message = ChatMessage.query.get_or_404(message_id)
+		db.session.delete(message)
+		db.session.commit()
+		flash('Сообщение удалено', 'info')
+		return redirect(url_for('admin_chat'))
 
 
 app = create_app()

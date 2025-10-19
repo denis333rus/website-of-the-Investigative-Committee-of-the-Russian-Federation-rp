@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Управление чатом - Админ-панель{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+	<h2><i class="bi bi-chat-dots"></i> Управление чатом</h2>
+	<a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+		<i class="bi bi-arrow-left"></i> Назад в админку
+	</a>
+</div>
+
+<div class="card">
+	<div class="card-header">
+		<h5 class="mb-0">Все сообщения чата</h5>
+	</div>
+	<div class="card-body">
+		{% if messages %}
+		<div class="table-responsive">
+			<table class="table table-hover">
+				<thead>
+					<tr>
+						<th>ID</th>
+						<th>Отправитель</th>
+						<th>Тип</th>
+						<th>Сообщение</th>
+						<th>Дата</th>
+						<th>Статус</th>
+						<th>Действия</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for message in messages %}
+					<tr>
+						<td>{{ message.id }}</td>
+						<td>
+							<strong>{{ message.sender_name }}</strong>
+							{% if message.sender %}
+								<br><small class="text-muted">{{ message.sender.position }}, {{ message.sender.rank }}</small>
+							{% endif %}
+						</td>
+						<td>
+							{% if message.sender_type == 'employee' %}
+								{% if message.sender and message.sender.role == 'admin' %}
+									<span class="badge bg-warning">Администратор СК РФ</span>
+								{% else %}
+									<span class="badge bg-danger">Сотрудник СК РФ</span>
+								{% endif %}
+							{% else %}
+								<span class="badge bg-primary">Гражданин</span>
+							{% endif %}
+						</td>
+						<td>
+							<div class="message-preview" style="max-width: 300px;">
+								{{ message.message[:100] }}{% if message.message|length > 100 %}...{% endif %}
+							</div>
+						</td>
+						<td>{{ message.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+						<td>
+							{% if message.is_read %}
+								<span class="badge bg-success">Прочитано</span>
+							{% else %}
+								<span class="badge bg-warning">Новое</span>
+							{% endif %}
+						</td>
+						<td>
+							<button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#messageModal{{ message.id }}">
+								<i class="bi bi-eye"></i> Просмотр
+							</button>
+							<form method="POST" action="{{ url_for('admin_chat_delete', message_id=message.id) }}" class="d-inline">
+								<button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить сообщение?')">
+									<i class="bi bi-trash"></i> Удалить
+								</button>
+							</form>
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+		{% else %}
+		<div class="text-center py-5">
+			<i class="bi bi-chat-dots display-1 text-muted"></i>
+			<h5 class="text-muted mt-3">Сообщений пока нет</h5>
+		</div>
+		{% endif %}
+	</div>
+</div>
+
+<!-- Модальные окна для просмотра сообщений -->
+{% for message in messages %}
+<div class="modal fade" id="messageModal{{ message.id }}" tabindex="-1">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">
+					Сообщение #{{ message.id }}
+					{% if message.sender_type == 'employee' %}
+						{% if message.sender and message.sender.role == 'admin' %}
+							<span class="badge bg-warning ms-2">Администратор СК РФ</span>
+						{% else %}
+							<span class="badge bg-danger ms-2">Сотрудник СК РФ</span>
+						{% endif %}
+					{% else %}
+						<span class="badge bg-primary ms-2">Гражданин</span>
+					{% endif %}
+				</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+			</div>
+			<div class="modal-body">
+				<div class="mb-3">
+					<strong>Отправитель:</strong> {{ message.sender_name }}
+					{% if message.sender %}
+						<br><small class="text-muted">{{ message.sender.position }}, {{ message.sender.rank }}</small>
+					{% endif %}
+				</div>
+				<div class="mb-3">
+					<strong>Дата:</strong> {{ message.created_at.strftime('%d.%m.%Y %H:%M:%S') }}
+				</div>
+				<div class="mb-3">
+					<strong>Сообщение:</strong>
+					<div class="mt-2 p-3 bg-light rounded">
+						{{ message.message|replace('\n', '<br>')|safe }}
+					</div>
+				</div>
+				<div class="mb-3">
+					<strong>Статус:</strong>
+					{% if message.is_read %}
+						<span class="badge bg-success">Прочитано</span>
+					{% else %}
+						<span class="badge bg-warning">Новое</span>
+					{% endif %}
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+				<form method="POST" action="{{ url_for('admin_chat_delete', message_id=message.id) }}" class="d-inline">
+					<button type="submit" class="btn btn-danger" onclick="return confirm('Удалить сообщение?')">
+						<i class="bi bi-trash"></i> Удалить
+					</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+{% endfor %}
+{% endblock %}

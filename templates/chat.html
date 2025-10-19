@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}Чат — СК РФ{% endblock %}
+
+{% block content %}
+<div class="container">
+	<div class="row justify-content-center">
+		<div class="col-lg-10">
+			<div class="card">
+				<div class="card-header bg-danger text-white">
+					<h2 class="mb-0"><i class="bi bi-chat-dots"></i> Чат СК РФ</h2>
+					<small>Общение между сотрудниками СК РФ и гражданами</small>
+				</div>
+				<div class="card-body">
+					<div class="alert alert-info">
+						<strong>Информация:</strong> В данном чате могут общаться сотрудники Следственного комитета и граждане. 
+						Все сообщения проходят модерацию.
+					</div>
+
+					<!-- Форма отправки сообщения -->
+					<div class="card mb-4">
+						<div class="card-header">
+							<h5 class="mb-0"><i class="bi bi-send"></i> Отправить сообщение</h5>
+						</div>
+						<div class="card-body">
+							{% if session.get('admin_logged_in') %}
+							<div class="alert alert-success">
+								<strong>Вы авторизованы как сотрудник СК РФ:</strong> {{ current_user.full_name if current_user and current_user.full_name else 'Не указано' }}
+								{% if current_user and current_user.position %}
+									<br><small>{{ current_user.position }}, {{ current_user.rank }}</small>
+								{% endif %}
+							</div>
+							{% endif %}
+							
+							<form method="POST">
+								<div class="row">
+									<div class="col-md-6 mb-3">
+										<label for="sender_name" class="form-label">Ваше ФИО</label>
+										{% if session.get('admin_logged_in') %}
+											<input type="text" class="form-control" id="sender_name" name="sender_name" 
+												   value="{{ current_user.full_name if current_user and current_user.full_name else '' }}" 
+												   readonly style="text-transform: uppercase;">
+											<div class="form-text">ФИО из вашего профиля</div>
+										{% else %}
+											<input type="text" class="form-control" id="sender_name" name="sender_name" 
+												   placeholder="ИВАНОВ ИВАН ИВАНОВИЧ" required style="text-transform: uppercase;">
+											<div class="form-text">Введите ФИО заглавными буквами</div>
+										{% endif %}
+									</div>
+									<div class="col-md-6 mb-3">
+										<label class="form-label">Тип пользователя</label>
+										<div class="form-control-plaintext">
+											{% if session.get('admin_logged_in') %}
+												{% if current_user and current_user.role == 'admin' %}
+													<span class="badge bg-warning">Администратор СК РФ</span>
+												{% else %}
+													<span class="badge bg-danger">Сотрудник СК РФ</span>
+												{% endif %}
+											{% else %}
+												<span class="badge bg-primary">Гражданин</span>
+											{% endif %}
+										</div>
+									</div>
+								</div>
+								<div class="mb-3">
+									<label for="message" class="form-label">Сообщение</label>
+									<textarea class="form-control" id="message" name="message" rows="3" 
+											  placeholder="Введите ваше сообщение..." required></textarea>
+								</div>
+								<button type="submit" class="btn btn-{% if session.get('admin_logged_in') %}danger{% else %}primary{% endif %}">
+									<i class="bi bi-send"></i> Отправить сообщение
+								</button>
+							</form>
+						</div>
+					</div>
+
+					<!-- Список сообщений -->
+					<div class="card">
+						<div class="card-header">
+							<h5 class="mb-0"><i class="bi bi-chat-text"></i> Сообщения</h5>
+						</div>
+						<div class="card-body" style="max-height: 500px; overflow-y: auto;">
+							{% if messages %}
+								{% for message in messages %}
+								<div class="message-item border-bottom pb-3 mb-3">
+									<div class="d-flex justify-content-between align-items-start mb-2">
+										<div>
+											<strong class="{% if message.sender_type == 'employee' %}text-danger{% else %}text-primary{% endif %}">
+												{{ message.sender_name }}
+											</strong>
+											{% if message.sender_type == 'employee' %}
+												{% if message.sender and message.sender.role == 'admin' %}
+													<span class="badge bg-warning ms-2">Администратор СК РФ</span>
+												{% else %}
+													<span class="badge bg-danger ms-2">Сотрудник СК РФ</span>
+												{% endif %}
+												{% if message.sender and message.sender.position %}
+													<br><small class="text-muted">{{ message.sender.position }}, {{ message.sender.rank }}</small>
+												{% endif %}
+											{% else %}
+												<span class="badge bg-primary ms-2">Гражданин</span>
+											{% endif %}
+										</div>
+										<small class="text-muted">{{ message.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+									</div>
+									<div class="message-content">
+										<p class="mb-0">{{ message.message }}</p>
+									</div>
+								</div>
+								{% endfor %}
+							{% else %}
+								<div class="text-center py-5">
+									<i class="bi bi-chat-dots display-4 text-muted"></i>
+									<h5 class="text-muted mt-3">Сообщений пока нет</h5>
+									<p class="text-muted">Станьте первым, кто напишет в чат</p>
+								</div>
+							{% endif %}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+// Автоматически преобразуем ФИО в заглавные буквы
+document.getElementById('sender_name').addEventListener('input', function(e) {
+	e.target.value = e.target.value.toUpperCase();
+});
+
+// Автоматическая прокрутка к последнему сообщению
+window.addEventListener('load', function() {
+	const messagesContainer = document.querySelector('.card-body[style*="overflow-y"]');
+	if (messagesContainer) {
+		messagesContainer.scrollTop = messagesContainer.scrollHeight;
+	}
+});
+</script>
+{% endblock %}

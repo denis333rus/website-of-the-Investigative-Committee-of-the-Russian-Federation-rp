@@ -4,6 +4,10 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>{% block title %}СК РФ — Новости (RP) {% endblock %}</title>
+	<link rel="icon" type="image/png" href="{{ url_for('static', filename='Logoskrf.png') }}">
+	<link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='Logoskrf.png') }}">
+	<link rel="apple-touch-icon" href="{{ url_for('static', filename='Logoskrf.png') }}">
+	<meta name="theme-color" content="#dc3545">
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 	<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
@@ -42,10 +46,12 @@
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_job_applications') }}">Заявки на работу</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_reviews') }}">Отзывы</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_documents') }}">Документооборот</a></li>
+					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_chat') }}">Чат</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_dashboard') }}">Админка</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_site_settings') }}">Лидер</a></li>
 					{% else %}
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('documents') }}">Документооборот</a></li>
+					<li class="nav-item"><a class="nav-link" href="{{ url_for('chat') }}">Чат</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_dashboard') }}">Рабочее место</a></li>
 					{% endif %}
 					<li class="nav-item">
@@ -64,6 +70,7 @@
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('job_application') }}">Приём на работу</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('track_application') }}">Отследить заявку</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('reviews') }}">Отзывы</a></li>
+					<li class="nav-item"><a class="nav-link" href="{{ url_for('chat') }}">Чат</a></li>
 					<li class="nav-item"><a class="nav-link" href="{{ url_for('admin_login') }}">Вход</a></li>
 					{% endif %}
 				</ul>
@@ -89,7 +96,14 @@
 
 	<footer class="bg-light py-4 mt-auto border-top">
 		<div class="container text-muted small">
-			© RP проект. Все материалы вымышленные, сходство случайно.
+			<div class="row">
+				<div class="col-md-8">
+					© RP проект. Все материалы вымышленные, сходство случайно. Логотипы и названия принадлежат их владельцам. sledcom.ru
+				</div>
+				<div class="col-md-4 text-md-end">
+					<a href="{{ url_for('privacy_policy') }}" class="text-muted text-decoration-none">Политика конфиденциальности</a>
+				</div>
+			</div>
 		</div>
 	</footer>
 
