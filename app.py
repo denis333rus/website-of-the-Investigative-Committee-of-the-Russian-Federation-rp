@@ -939,6 +939,26 @@ def register_routes(app: Flask) -> None:
 		if user.username == 'denis333rus':
 			flash('Нельзя удалить базового администратора', 'warning')
 			return redirect(url_for('admin_users_list'))
+		
+		# Проверяем, есть ли связанные документы
+		authored_documents = Document.query.filter_by(author_id=user_id).count()
+		approved_documents = Document.query.filter_by(approved_by_id=user_id).count()
+		
+		if authored_documents > 0:
+			# Переносим документы к администратору
+			admin_user = AdminUser.query.filter_by(role='admin').first()
+			if admin_user:
+				Document.query.filter_by(author_id=user_id).update({'author_id': admin_user.id})
+				flash(f'Документы пользователя перенесены к администратору {admin_user.full_name}', 'info')
+			else:
+				flash('Нельзя удалить пользователя: у него есть документы, а администратор не найден', 'danger')
+				return redirect(url_for('admin_users_list'))
+		
+		# Обнуляем approved_by_id для документов, которые одобрил этот пользователь
+		if approved_documents > 0:
+			Document.query.filter_by(approved_by_id=user_id).update({'approved_by_id': None})
+		
+		# Удаляем пользователя
 		db.session.delete(user)
 		db.session.commit()
 		flash('Пользователь удалён', 'info')
