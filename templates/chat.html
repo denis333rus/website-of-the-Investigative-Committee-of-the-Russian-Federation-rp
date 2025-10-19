@@ -67,6 +67,12 @@
 									<textarea class="form-control" id="message" name="message" rows="3" 
 											  placeholder="Введите ваше сообщение..." required></textarea>
 								</div>
+								<div class="mb-3 form-check">
+									<input type="checkbox" class="form-check-input" id="privacy_agreement" name="privacy_agreement" required>
+									<label class="form-check-label" for="privacy_agreement">
+										Я согласен с <a href="/privacy_policy" target="_blank" class="text-decoration-none">Политикой конфиденциальности</a> *
+									</label>
+								</div>
 								<button type="submit" class="btn btn-{% if session.get('admin_logged_in') %}danger{% else %}primary{% endif %}">
 									<i class="bi bi-send"></i> Отправить сообщение
 								</button>

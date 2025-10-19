@@ -60,6 +60,14 @@
 				<label class="form-label">Дополнительная информация</label>
 				<textarea class="form-control" name="question8" rows="3" placeholder="Любая дополнительная информация, которую считаете важной">{{ question8 or '' }}</textarea>
 			</div>
+			<div class="col-12">
+				<div class="form-check">
+					<input type="checkbox" class="form-check-input" id="privacy_agreement" name="privacy_agreement" required>
+					<label class="form-check-label" for="privacy_agreement">
+						Я согласен с <a href="/privacy_policy" target="_blank" class="text-decoration-none">Политикой конфиденциальности</a> *
+					</label>
+				</div>
+			</div>
 		</div>
 		<div class="mt-3">
 			<button class="btn btn-primary" type="submit">Подать заявку</button>

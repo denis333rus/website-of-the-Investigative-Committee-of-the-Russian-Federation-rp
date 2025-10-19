@@ -748,8 +748,14 @@ def register_routes(app: Flask) -> None:
 			email = request.form.get('email', '').strip() or None
 			phone = request.form.get('phone', '').strip() or None
 			message = request.form.get('message', '').strip()
+			privacy_agreement = request.form.get('privacy_agreement')
+			
 			if not full_name or not message:
 				flash('Укажите ФИО и текст заявления', 'warning')
+				return render_template('feedback.html', full_name=full_name, email=email, phone=phone, message=message)
+			
+			if not privacy_agreement:
+				flash('Необходимо согласиться с Политикой конфиденциальности', 'warning')
 				return render_template('feedback.html', full_name=full_name, email=email, phone=phone, message=message)
 			item = Feedback(full_name=full_name, email=email, phone=phone, message=message)
 			db.session.add(item)
@@ -774,9 +780,18 @@ def register_routes(app: Flask) -> None:
 			question6 = request.form.get('question6', '').strip()
 			question7 = request.form.get('question7', '').strip()
 			question8 = request.form.get('question8', '').strip()
+			privacy_agreement = request.form.get('privacy_agreement')
 			
 			if not all([full_name, desired_username, desired_password, question1, question2, question3]):
 				flash('Заполните все обязательные поля', 'warning')
+				return render_template('job_application.html', 
+					full_name=full_name, desired_username=desired_username, 
+					question1=question1, question2=question2, question3=question3,
+					question4=question4, question5=question5, question6=question6,
+					question7=question7, question8=question8)
+			
+			if not privacy_agreement:
+				flash('Необходимо согласиться с Политикой конфиденциальности', 'warning')
 				return render_template('job_application.html', 
 					full_name=full_name, desired_username=desired_username, 
 					question1=question1, question2=question2, question3=question3,
@@ -1188,9 +1203,14 @@ def register_routes(app: Flask) -> None:
 			rating = request.form.get('rating', type=int)
 			title = request.form.get('title', '').strip()
 			content = request.form.get('content', '').strip()
+			privacy_agreement = request.form.get('privacy_agreement')
 			
 			if not all([author_name, rating, title, content]):
 				flash('Все поля обязательны для заполнения', 'danger')
+				return render_template('reviews.html')
+			
+			if not privacy_agreement:
+				flash('Необходимо согласиться с Политикой конфиденциальности', 'warning')
 				return render_template('reviews.html')
 			
 			if rating < 1 or rating > 5:
@@ -1330,9 +1350,14 @@ def register_routes(app: Flask) -> None:
 		if request.method == 'POST':
 			message = request.form.get('message', '').strip()
 			sender_name = request.form.get('sender_name', '').strip()
+			privacy_agreement = request.form.get('privacy_agreement')
 			
 			if not message or not sender_name:
 				flash('Заполните все поля', 'warning')
+				return redirect(url_for('chat'))
+			
+			if not privacy_agreement:
+				flash('Необходимо согласиться с Политикой конфиденциальности', 'warning')
 				return redirect(url_for('chat'))
 			
 			# Определяем тип отправителя
